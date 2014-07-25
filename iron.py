@@ -13,8 +13,8 @@ x = 1
 y = 2
 
 def f(n):
-    global h
-    return y * n
+    # global h
+    return y * n * h
 
 print x
 """
@@ -46,15 +46,16 @@ class Scope(object):
             scope = scope.parent
         return scope
 
-        # return some(_.is_module, iterate(_.parent, self))
-        # return some(attrgetter('is_module'), iterate(attrgetter('parent'), self))
-
     def add(self, name, node):
-        # load/store context is in the node
-        if isinstance(node.ctx, ast.Param) or name in self.names:
+        # Function defs and params are always in current scope.
+        # Other names could be passed to parent scope upon exit, unless it's a module.
+        if self.is_module                            \
+                or isinstance(node, ast.FunctionDef) \
+                or isinstance(node.ctx, ast.Param)   \
+                or name in self.names:
             self.names[name].append(node)
         else:
-            self.unscoped_names.append(node)
+            self.unscoped_names[name].append(node)
 
     def make_global(self, names):
         self.global_names.update(names)
@@ -63,18 +64,15 @@ class Scope(object):
         # Extract global names to module scope
         for name in self.global_names:
             nodes = self.unscoped_names.pop(name, [])
-            self.module.nodes[name].extend(nodes)
+            self.module.names[name].extend(nodes)
 
         # TODO: add nonlocal support here
 
         # Detect local names
-        for name, nodes in self.unscoped_names.items():
-            if any(isa(ast.Store, ast.Del, ast.Param), nodes):
-                self.scope.add(name, *nodes)
-                # ...
-
-    # def __contains__(self, name):
-    #     return name in self.names
+        for name, nodes in list(self.unscoped_names.items()):
+            if self.is_module or any(isinstance(node.ctx, (ast.Store, ast.Del)) for node in nodes):
+                self.names[name].extend(nodes)
+                self.unscoped_names.pop(name)
 
     def dump(self, indent=''):
         name = self.node.__class__.__name__
@@ -86,26 +84,19 @@ class Scope(object):
         title = indent + 'Scope ' + name
         names = '\n'.join(indent + '  %s = %s' % (name, nodes)
                           for name, nodes in sorted(self.names.items()))
+        unscoped = '\n'.join(indent + '  unscoped %s = %s' % (name, nodes)
+                             for name, nodes in sorted(self.unscoped_names.items()))
         children = ''.join(c.dump(indent + '  ') for c in self.children)
 
-        return title + '\n' + names + '\n' + children
+        return '\n'.join([title, names, unscoped, children])
 
     def __str__(self):
         return self.dump()
-
-# class ScopedName(object):
-#     def __init__(self, name, scope):
-#         self.name = name
-#         self.scope = scope
-#         self.context = None
-#         self.nodes = []
 
 
 class ScopeBuilder(ast.NodeVisitor):
     def __init__(self):
         self.scopes = deque()
-        self.global_names = set()
-        self.unscoped_names = defaultdict(list)
 
     # Scope mechanics
     @property
@@ -119,25 +110,13 @@ class ScopeBuilder(ast.NodeVisitor):
         self.scopes.append(Scope(self.scope, node))
 
     def pop_scope(self):
-        from funcy import first, any, isa
-
-        # Extract global names to module scope
-        if self.global_names:
-            module = first(s for s in reversed(self.scopes) if s.is_module)
-            for name in self.global_names:
-                nodes = self.unscoped_names.pop(name, [])
-                module.add(name, *nodes)
-
-        # TODO: add nonlocal support here
-
-        # Detect local names
-        for name, nodes in self.unscoped_names.items():
-            if any(isa(ast.Store, ast.Del, ast.Param), nodes):
-                self.scope.add(name, *nodes)
-                # ...
-
-        return self.scopes.pop()
-
+        current = self.scope
+        current.resolve()
+        self.scopes.pop()
+        if self.scope:
+            self.scope.unscoped_names = current.unscoped_names
+            current.unscoped_names = {}
+        return current
 
     # Visiting
     def visit_Module(self, node):
@@ -159,17 +138,10 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_Name(self, node):
         print 'Name', node.id, node.ctx
-        self.unscoped_names[node.id].append(node)
+        self.scope.add(node.id, node)
 
     def visit_Global(self, node):
-        self.global_names.update(node.names)
-
-        # # Don't work if global or nonlocal is in use
-        # if isinstance(node.ctx, (ast.Store, ast.Del))
-        #     self.scope.add(node.id, node)
-        # else:
-        #     self.unscoped_names.append(node)
-
+        self.scope.make_global(node.names)
 
 
 sb = ScopeBuilder()
