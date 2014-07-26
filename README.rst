@@ -11,6 +11,7 @@ Plans
 
 Things to catch:
 
+- find undefined names (possible typos)
 - unused imports
 - unused variables/values/parameters
 - unused/not exported functions/classes
@@ -20,8 +21,10 @@ Things to catch:
 - debug prints? debug code?
 - dead code
 - dead conditions (if True or ...:)
-- find undefined names (possible typos)
+- reusing name for different purpose
+- reusing name with a change of type
 - predict TypeErrors by type inferencing
+- name giving wrong hint about its type, e.g. smiles_dict being a list
 
 Globally:
 
