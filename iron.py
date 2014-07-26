@@ -46,6 +46,8 @@ class Scope(object):
             scope = scope.parent
         return scope
 
+    # Names
+
     def add(self, name, node):
         # Function defs and params are always in current scope.
         # Other names could be passed to parent scope upon exit, unless it's a module.
@@ -73,6 +75,12 @@ class Scope(object):
             if self.is_module or any(isinstance(node.ctx, (ast.Store, ast.Del)) for node in nodes):
                 self.names[name].extend(nodes)
                 self.unscoped_names.pop(name)
+
+    def pass_unscoped(self, other_scope):
+        other_scope.unscoped_names = self.unscoped_names
+        self.unscoped_names = defaultdict(list)
+
+    # Stringification
 
     def dump(self, indent=''):
         name = self.node.__class__.__name__
@@ -114,8 +122,7 @@ class ScopeBuilder(ast.NodeVisitor):
         current.resolve()
         self.scopes.pop()
         if self.scope:
-            self.scope.unscoped_names = current.unscoped_names
-            current.unscoped_names = {}
+            current.pass_unscoped(self.scope)
         return current
 
     # Visiting
