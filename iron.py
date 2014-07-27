@@ -7,12 +7,13 @@ from astpp import dump # use astor?
 
 
 SOURCE = """
-# import sys
+import sys
 
 x = 1
 y = 2
 
 def f(n):
+    import os as s
     # global h
     return y * n * h
 
@@ -49,12 +50,11 @@ class Scope(object):
     # Names
 
     def add(self, name, node):
-        # Function defs and params are always in current scope.
-        # Other names could be passed to parent scope upon exit, unless it's a module.
-        if self.is_module                            \
-                or isinstance(node, ast.FunctionDef) \
-                or isinstance(node.ctx, ast.Param)   \
-                or name in self.names:
+        # Params are always in current scope.
+        # Other names could be made global or passed to parent scope upon exit, 
+        # unless we are in a module.
+        is_param = isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param)
+        if is_param or name in self.names or self.is_module:
             self.names[name].append(node)
         else:
             self.unscoped_names[name].append(node)
@@ -72,7 +72,7 @@ class Scope(object):
 
         # Detect local names
         for name, nodes in list(self.unscoped_names.items()):
-            if self.is_module or any(isinstance(node.ctx, (ast.Store, ast.Del)) for node in nodes):
+            if self.is_module or any(is_write, nodes):
                 self.names[name].extend(nodes)
                 self.unscoped_names.pop(name)
 
@@ -100,6 +100,10 @@ class Scope(object):
 
     def __str__(self):
         return self.dump()
+
+def is_write(node):
+    return isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef)) \
+        or isinstance(node.ctx, (ast.Store, ast.Del))
 
 
 class ScopeBuilder(ast.NodeVisitor):
@@ -130,6 +134,14 @@ class ScopeBuilder(ast.NodeVisitor):
         self.push_scope(node)
         self.generic_visit(node)
         return self.pop_scope()
+
+    def visit_Import(self, node):
+        for alias in node.names:
+            self.scope.add(alias.asname or alias.name, node)
+
+    def visit_ImportFrom(self, node):
+        if node.module != '__future__':
+            self.visit_Import(node)
 
     def visit_Class(self, node):
         raise NotImplementedError
