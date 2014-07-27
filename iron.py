@@ -77,8 +77,9 @@ class Scope(object):
                 self.unscoped_names.pop(name)
 
     def pass_unscoped(self, other_scope):
-        other_scope.unscoped_names = self.unscoped_names
-        self.unscoped_names = defaultdict(list)
+        print "Passing unscoped", self.unscoped_names.keys(), "from", self.node, "to", other_scope.node
+        other_scope.unscoped_names.update(self.unscoped_names)
+        self.unscoped_names = empty(self.unscoped_names)
 
     # Stringification
 
