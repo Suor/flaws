@@ -22,6 +22,11 @@ print x
 class A(Base):
     def meth(self):
         return self + 1
+
+default = 'hi'
+
+def g(x=default): # this is global
+    default = 10  # this is local
 """
 
 tree = ast.parse(SOURCE, filename='example.py')
@@ -152,6 +157,8 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_ClassDef(self, node):
         self.scope.add(node.name, node)
+
+        # TODO: base classes should be visited in outer scope
 
         print 'push class'
         self.push_scope(node)
