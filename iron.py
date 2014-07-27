@@ -18,6 +18,10 @@ def f(n):
     return y * n * h
 
 print x
+
+class A(Base):
+    def meth(self):
+        return self + 1
 """
 
 tree = ast.parse(SOURCE, filename='example.py')
@@ -63,6 +67,8 @@ class Scope(object):
         self.global_names.update(names)
 
     def resolve(self):
+        print 'RESOVE', self.node, self.unscoped_names.keys()
+
         # Extract global names to module scope
         for name in self.global_names:
             nodes = self.unscoped_names.pop(name, [])
@@ -144,17 +150,26 @@ class ScopeBuilder(ast.NodeVisitor):
         if node.module != '__future__':
             self.visit_Import(node)
 
-    def visit_Class(self, node):
-        raise NotImplementedError
+    def visit_ClassDef(self, node):
+        self.scope.add(node.name, node)
+
+        print 'push class'
+        self.push_scope(node)
+        self.generic_visit(node)
+        return self.pop_scope()
+        print 'pop class'
 
     def visit_FunctionDef(self, node):
         print 'visit_FunctionDef'
         self.scope.add(node.name, node)
 
+        # TODO: args defaults should be visited in outer scope
+
         self.push_scope(node)
         self.generic_visit(node)
-        print 'exit visit_FunctionDef'
+        print 'exit visit_FunctionDef', self.scope.unscoped_names
         return self.pop_scope()
+        # print 'exited visit_FunctionDef', self.scope.unscoped_names
 
     def visit_Name(self, node):
         print 'Name', node.id, node.ctx
