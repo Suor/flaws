@@ -29,6 +29,7 @@ Globally:
 - wrong defaults for parameters (always overridden)
 - globally dead code
 - global type inferencing?
+- outdated dependencies in requirements.txt or setup.py?
 
 Style:
 
@@ -43,6 +44,7 @@ Style:
 - built-in overrides
 - parentheses in if, while
 - for list.append -> list.extend
+- not using negative indexing, i.e. arr[len(arr)-1]
 
 Type inference and stuff:
 
