@@ -1,7 +1,7 @@
 Iron
 ====
 
-A tool to iron out your python code.
+A python code static analyzer. Catches common errors.
 
 Under development, doesn't even work yet.
 
