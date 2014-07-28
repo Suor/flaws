@@ -60,7 +60,7 @@ class Scope(object):
 
     def add(self, name, node):
         # Params are always in current scope.
-        # Other names could be made global or passed to parent scope upon exit, 
+        # Other names could be made global or passed to parent scope upon exit,
         # unless we are in a module.
         is_param = isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param)
         if is_param or name in self.names or self.is_module:
@@ -122,6 +122,10 @@ class ScopeBuilder(ast.NodeVisitor):
     def __init__(self):
         self.scopes = deque()
 
+    def visit_all(self, *node_lists):
+        for node in icat(node_lists):
+            self.visit(node)
+
     # Scope mechanics
     @property
     def scope(self):
@@ -157,26 +161,23 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_ClassDef(self, node):
         self.scope.add(node.name, node)
+        # TODO: handle python 3 style metaclass
+        self.visit_all(node.decorator_list, node.bases)
 
-        # TODO: base classes should be visited in outer scope
-
-        print 'push class'
         self.push_scope(node)
-        self.generic_visit(node)
+        self.visit_all(node.body)
         return self.pop_scope()
-        print 'pop class'
 
     def visit_FunctionDef(self, node):
         print 'visit_FunctionDef'
         self.scope.add(node.name, node)
-
-        # TODO: args defaults should be visited in outer scope
+        self.visit_all(node.decorator_list, node.args.defaults)
 
         self.push_scope(node)
-        self.generic_visit(node)
+        # TODO: handle varargs, kwargs, and kwonlyargs
+        self.visit_all(node.args.args, node.body)
         print 'exit visit_FunctionDef', self.scope.unscoped_names
         return self.pop_scope()
-        # print 'exited visit_FunctionDef', self.scope.unscoped_names
 
     def visit_Name(self, node):
         print 'Name', node.id, node.ctx
