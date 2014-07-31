@@ -38,6 +38,7 @@ Style:
 - use generator expression instead of list comprehension
 - don't use unneeded parentheses in generator expression
 - use map/list comprehension instead of for/list.append loop
+- use map/filter instead of list/generator expression
 - use defaultdicts and deque instead of dicts and lists where appropriate
 - use iterator versions of map()/filter()/... where appropriate
 - use list comprehension instead of map(lambda)/filter(lambda)
@@ -45,6 +46,8 @@ Style:
 - parentheses in if, while
 - for list.append -> list.extend
 - not using negative indexing, i.e. arr[len(arr)-1]
+- not using built-in functions properly (_popget)
+- passing defaults to functions, i.e. some_dict.get(key, None)
 
 Type inference and stuff:
 
