@@ -176,12 +176,12 @@ class ScopeBuilder(ast.NodeVisitor):
 
 
 SOURCE = """
-# import sys
+import sys
 
 x = 1
 y = 2
 
-def f(n):
+def f(n, uh=None):
     _def = None
     # import os as s
     # global h
@@ -206,10 +206,21 @@ sb = ScopeBuilder()
 top = sb.visit(tree)
 print top
 
-for name, nodes in scope.names.items():
+
+def name_class(node):
+    if isinstance(node, (ast.Import, ast.ImportFrom)):
+        return 'import'
+    elif isinstance(node, ast.FunctionDef):
+        return 'function'
+    elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param):
+        return 'param'
+    else:
+        return 'variable'
+
 for scope, name, nodes in top.walk():
     node = nodes[0]
     if all(is_use, nodes):
         print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
     if all(is_write, nodes):
-        print 'Variable %s is never used at %d:%d' % (name, node.lineno, node.col_offset)
+        print '%s %s is never used at %d:%d' % \
+              (name_class(node).title(), name, node.lineno, node.col_offset)
