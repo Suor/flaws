@@ -103,7 +103,8 @@ class Scope(object):
 
 
 def is_write(node):
-    return isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.ClassDef)) \
+    return isinstance(node, (ast.Import, ast.ImportFrom,
+                             ast.FunctionDef, ast.ClassDef, ast.arguments)) \
         or isinstance(node.ctx, (ast.Store, ast.Del, ast.Param))
 
 def is_use(node):
@@ -167,8 +168,17 @@ class ScopeBuilder(ast.NodeVisitor):
         self.visit_all(node.decorator_list, node.args.defaults)
 
         self.push_scope(node)
-        # TODO: handle varargs, kwargs, and kwonlyargs
         self.visit_all(node.args.args, node.body)
+        # Visit vararg and kwarg
+        # NOTE: arguments node doesn't have lineno and col_offset,
+        #       so we copy them from a function node
+        node.args.lineno = node.lineno
+        node.args.col_offset = node.col_offset
+        if node.args.vararg:
+            self.scope.add(node.args.vararg, node.args)
+        if node.args.kwarg:
+            self.scope.add(node.args.kwarg, node.args)
+        # TODO: handle kwonlyargs
         # print 'exit visit_FunctionDef', self.scope.unscoped_names
         return self.pop_scope()
 
@@ -192,7 +202,8 @@ def name_class(node):
         return 'import'
     elif isinstance(node, ast.FunctionDef):
         return 'function'
-    elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param):
+    elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param) \
+         or isinstance(node, ast.arguments):
         return 'param'
     else:
         return 'variable'
