@@ -199,24 +199,24 @@ def name_class(node):
 
 
 def main():
-    filename = sys.argv[1]
-    print '> Analyzing %s...' % filename
+    for filename in sys.argv[1:]:
+        print '> Analyzing %s...' % filename
 
-    source = slurp(filename)
-    tree = ast.parse(source, filename=filename)
-    # print dump(tree)
+        source = slurp(filename)
+        tree = ast.parse(source, filename=filename)
+        print dump(tree)
 
-    sb = ScopeBuilder()
-    top = sb.visit(tree)
-    # print top
+        sb = ScopeBuilder()
+        top = sb.visit(tree)
+        print top
 
-    for scope, name, nodes in top.walk():
-        node = nodes[0]
-        if all(is_use, nodes):
-            print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
-        if all(is_write, nodes):
-            print '%s %s is never used at %d:%d' % \
-                  (name_class(node).title(), name, node.lineno, node.col_offset)
+        for scope, name, nodes in top.walk():
+            node = nodes[0]
+            if all(is_use, nodes):
+                print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
+            if all(is_write, nodes):
+                print '%s %s is never used at %d:%d' % \
+                      (name_class(node).title(), name, node.lineno, node.col_offset)
 
 
 if __name__ == '__main__':
