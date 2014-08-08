@@ -69,7 +69,10 @@ class Scope(object):
     def pass_unscoped(self, other_scope):
         # print "Passing unscoped", self.unscoped_names.keys(), "from", self.node, "to", other_scope.node
         for name, nodes in self.unscoped_names.items():
-            other_scope.unscoped_names[name].extend(nodes)
+            if name in other_scope.names:
+                other_scope.names[name].extend(nodes)
+            else:
+                other_scope.unscoped_names[name].extend(nodes)
         self.unscoped_names = empty(self.unscoped_names)
 
     def walk(self):
