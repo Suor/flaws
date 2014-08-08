@@ -21,6 +21,8 @@ Things to catch:
 - debug prints? debug code?
 - dead code
 - dead conditions (if True or ...:)
+- wrong except, e.g. except TypeError, ValueError
+- forgotten returns
 
 Globally:
 
@@ -48,6 +50,7 @@ Style:
 - not using negative indexing, i.e. arr[len(arr)-1]
 - not using built-in functions properly (_popget)
 - passing defaults to functions, i.e. some_dict.get(key, None)
+- find duplicate code
 
 Type inference and stuff:
 
