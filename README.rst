@@ -35,6 +35,7 @@ Globally:
 
 Style:
 
+- rewrite if cond: return True; else: False
 - c-style loops
 - loops by index
 - use generator expression instead of list comprehension
@@ -47,6 +48,7 @@ Style:
 - built-in overrides
 - parentheses in if, while
 - for list.append -> list.extend
+- needless slicing
 - not using negative indexing, i.e. arr[len(arr)-1]
 - not using built-in functions properly (_popget)
 - passing defaults to functions, i.e. some_dict.get(key, None)
