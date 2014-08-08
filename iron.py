@@ -7,6 +7,11 @@ from funcy import *
 from astpp import dump # use astor?
 
 
+# TODO: distinguish python versions
+import __builtin__
+BUILTINS = set(dir(__builtin__))
+
+
 class Scope(object):
     def __init__(self, parent, node):
         self.parent = parent
@@ -169,7 +174,7 @@ class ScopeBuilder(ast.NodeVisitor):
     def visit_Name(self, node):
         # print 'Name', node.id, node.ctx
         # TODO: respect assignments to these or make it a separate error
-        if node.id not in {'None', 'True', 'False'}:
+        if node.id not in BUILTINS:
             self.scope.add(node.id, node)
 
     def visit_Global(self, node):
