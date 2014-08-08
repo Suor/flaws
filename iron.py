@@ -24,16 +24,20 @@ class Scope(object):
         self.unscoped_names = defaultdict(list)
         self.global_names = set()
 
-    @property
-    def is_module(self):
-        return isinstance(self.node, ast.Module)
-
     @cached_property
     def module(self):
         scope = self
         while not scope.is_module:
             scope = scope.parent
         return scope
+
+    @property
+    def is_module(self):
+        return isinstance(self.node, ast.Module)
+
+    @property
+    def is_class(self):
+        return isinstance(self.node, ast.ClassDef)
 
     # Names
 
@@ -234,7 +238,7 @@ def main():
             node = nodes[0]
             if all(is_use, nodes):
                 print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
-            if all(is_write, nodes):
+            if not scope.is_class and all(is_write, nodes):
                 print '%s %s is never used at %d:%d' % \
                       (name_class(node).title(), name, node.lineno, node.col_offset)
 
