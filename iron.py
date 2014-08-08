@@ -102,7 +102,7 @@ class Scope(object):
 
 
 def is_write(node):
-    return isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef)) \
+    return isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.ClassDef)) \
         or isinstance(node.ctx, (ast.Store, ast.Del, ast.Param))
 
 def is_use(node):
