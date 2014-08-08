@@ -65,6 +65,14 @@ class Scope(object):
         other_scope.unscoped_names.update(self.unscoped_names)
         self.unscoped_names = empty(self.unscoped_names)
 
+    def walk(self):
+        for name, nodes in self.names.items():
+            yield self, name, nodes
+
+        for child in self.children:
+            for scope, name, nodes in child.walk():
+                yield scope, name, nodes
+
     # Stringification
 
     def dump(self, indent=''):
@@ -85,6 +93,7 @@ class Scope(object):
 
     def __str__(self):
         return self.dump()
+
 
 def is_write(node):
     return isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef)) \
@@ -194,10 +203,11 @@ tree = ast.parse(SOURCE, filename='example.py')
 print dump(tree)
 
 sb = ScopeBuilder()
-scope = sb.visit(tree)
-print scope
+top = sb.visit(tree)
+print top
 
 for name, nodes in scope.names.items():
+for scope, name, nodes in top.walk():
     node = nodes[0]
     if all(is_use, nodes):
         print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
