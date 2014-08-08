@@ -6,33 +6,6 @@ from funcy import *
 from astpp import dump # use astor?
 
 
-SOURCE = """
-import sys
-
-x = 1
-y = 2
-
-def f(n):
-    import os as s
-    # global h
-    return y * n * h
-
-print x
-
-class A(Base):
-    def meth(self):
-        return self + 1
-
-default = 'hi'
-
-def g(x=default): # this is global
-    default = 10  # this is local
-"""
-
-tree = ast.parse(SOURCE, filename='example.py')
-print dump(tree)
-
-
 class Scope(object):
     def __init__(self, parent, node):
         self.parent = parent
@@ -115,7 +88,11 @@ class Scope(object):
 
 def is_write(node):
     return isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef)) \
-        or isinstance(node.ctx, (ast.Store, ast.Del))
+        or isinstance(node.ctx, (ast.Store, ast.Del, ast.Param))
+
+def is_use(node):
+    return isinstance(node, ast.Name) \
+       and isinstance(node.ctx, (ast.Load, ast.Del))
 
 
 class ScopeBuilder(ast.NodeVisitor):
@@ -181,12 +158,48 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_Name(self, node):
         print 'Name', node.id, node.ctx
-        self.scope.add(node.id, node)
+        # TODO: respect assignments to these or make it a separate error
+        if node.id not in {'None', 'True', 'False'}:
+            self.scope.add(node.id, node)
 
     def visit_Global(self, node):
         self.scope.make_global(node.names)
 
 
+SOURCE = """
+# import sys
+
+x = 1
+y = 2
+
+def f(n):
+    _def = None
+    # import os as s
+    # global h
+    return y * n * h
+
+# print x
+
+# class A(Base):
+#     def meth(self):
+#         return self + 1
+
+# default = 'hi'
+
+# def g(x=default): # this is global
+#     default = 10  # this is local
+"""
+
+tree = ast.parse(SOURCE, filename='example.py')
+print dump(tree)
+
 sb = ScopeBuilder()
 scope = sb.visit(tree)
 print scope
+
+for name, nodes in scope.names.items():
+    node = nodes[0]
+    if all(is_use, nodes):
+        print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
+    if all(is_write, nodes):
+        print 'Variable %s is never used at %d:%d' % (name, node.lineno, node.col_offset)
