@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import ast
 from collections import defaultdict, deque
@@ -175,36 +176,9 @@ class ScopeBuilder(ast.NodeVisitor):
         self.scope.make_global(node.names)
 
 
-SOURCE = """
-import sys
-
-x = 1
-y = 2
-
-def f(n, uh=None):
-    _def = None
-    # import os as s
-    # global h
-    return y * n * h
-
-# print x
-
-# class A(Base):
-#     def meth(self):
-#         return self + 1
-
-# default = 'hi'
-
-# def g(x=default): # this is global
-#     default = 10  # this is local
-"""
-
-tree = ast.parse(SOURCE, filename='example.py')
-print dump(tree)
-
-sb = ScopeBuilder()
-top = sb.visit(tree)
-print top
+def slurp(filename):
+    with open(filename) as f:
+        return f.read()
 
 
 def name_class(node):
@@ -217,10 +191,27 @@ def name_class(node):
     else:
         return 'variable'
 
-for scope, name, nodes in top.walk():
-    node = nodes[0]
-    if all(is_use, nodes):
-        print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
-    if all(is_write, nodes):
-        print '%s %s is never used at %d:%d' % \
-              (name_class(node).title(), name, node.lineno, node.col_offset)
+
+def main():
+    filename = sys.argv[1]
+    print '> Analyzing %s...' % filename
+
+    source = slurp(filename)
+    tree = ast.parse(source, filename=filename)
+    # print dump(tree)
+
+    sb = ScopeBuilder()
+    top = sb.visit(tree)
+    # print top
+
+    for scope, name, nodes in top.walk():
+        node = nodes[0]
+        if all(is_use, nodes):
+            print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
+        if all(is_write, nodes):
+            print '%s %s is never used at %d:%d' % \
+                  (name_class(node).title(), name, node.lineno, node.col_offset)
+
+
+if __name__ == '__main__':
+    main()
