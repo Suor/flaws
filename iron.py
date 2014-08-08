@@ -45,7 +45,7 @@ class Scope(object):
         self.global_names.update(names)
 
     def resolve(self):
-        print 'RESOVE', self.node, self.unscoped_names.keys()
+        # print 'RESOVE', self.node, self.unscoped_names.keys()
 
         # Extract global names to module scope
         for name in self.global_names:
@@ -61,7 +61,7 @@ class Scope(object):
                 self.unscoped_names.pop(name)
 
     def pass_unscoped(self, other_scope):
-        print "Passing unscoped", self.unscoped_names.keys(), "from", self.node, "to", other_scope.node
+        # print "Passing unscoped", self.unscoped_names.keys(), "from", self.node, "to", other_scope.node
         other_scope.unscoped_names.update(self.unscoped_names)
         self.unscoped_names = empty(self.unscoped_names)
 
@@ -155,18 +155,18 @@ class ScopeBuilder(ast.NodeVisitor):
         return self.pop_scope()
 
     def visit_FunctionDef(self, node):
-        print 'visit_FunctionDef'
+        # print 'visit_FunctionDef'
         self.scope.add(node.name, node)
         self.visit_all(node.decorator_list, node.args.defaults)
 
         self.push_scope(node)
         # TODO: handle varargs, kwargs, and kwonlyargs
         self.visit_all(node.args.args, node.body)
-        print 'exit visit_FunctionDef', self.scope.unscoped_names
+        # print 'exit visit_FunctionDef', self.scope.unscoped_names
         return self.pop_scope()
 
     def visit_Name(self, node):
-        print 'Name', node.id, node.ctx
+        # print 'Name', node.id, node.ctx
         # TODO: respect assignments to these or make it a separate error
         if node.id not in {'None', 'True', 'False'}:
             self.scope.add(node.id, node)
