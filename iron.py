@@ -90,9 +90,9 @@ class Scope(object):
             name += ' a line %d' % self.node.lineno
 
         title = indent + 'Scope ' + name
-        names = '\n'.join(indent + '  %s = %s' % (name, nodes)
+        names = '\n'.join(indent + '  %s = %s' % (name, nodes_str(nodes))
                           for name, nodes in sorted(self.names.items()))
-        unscoped = '\n'.join(indent + '  unscoped %s = %s' % (name, nodes)
+        unscoped = '\n'.join(indent + '  unscoped %s = %s' % (name, nodes_str(nodes))
                              for name, nodes in sorted(self.unscoped_names.items()))
         children = ''.join(c.dump(indent + '  ') for c in self.children)
 
@@ -207,6 +207,12 @@ def name_class(node):
         return 'param'
     else:
         return 'variable'
+
+def node_str(node):
+    return '%s at %d:%d' % (name_class(node), node.lineno, node.col_offset)
+
+def nodes_str(nodes):
+    return '[%s]' % ', '.join(map(node_str, nodes))
 
 
 def main():
