@@ -228,11 +228,11 @@ def main():
 
         source = slurp(filename)
         tree = ast.parse(source, filename=filename)
-        print dump(tree)
+        # print dump(tree)
 
         sb = ScopeBuilder()
         top = sb.visit(tree)
-        print top
+        # print top
 
         for scope, name, nodes in top.walk():
             node = nodes[0]
