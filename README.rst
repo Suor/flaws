@@ -62,3 +62,15 @@ Type inference and stuff:
 - reusing name for different purpose
 - reusing name with a change of type
 - functions returning different types, e.g. ints and lists on different occasions
+- using class methods and attributes that don't exist
+
+Value inferencing:
+
+- unused value
+- redefining a function/class/method in the same scope
+- using a variable before setting it
+- passing the wrong number of parameters to functions/methods/constructors
+- passing the wrong number of parameters to builtin functions & methods
+- using format strings that don't match arguments
+- changing signature when overriding a method
+- constructing a list when generator is enough
