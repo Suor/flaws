@@ -39,6 +39,29 @@ class Scope(object):
     def is_class(self):
         return isinstance(self.node, ast.ClassDef)
 
+    @cached_property
+    def exports(self):
+        # There are several possible scenarious:
+        #   1. Explicit exports
+        #   2. No explicit exports, using _ prefix?
+        #   3. Failed to parse __all__
+        #   4. Not a module - same as __all__ = []?
+        # We treat 3 as 2 for now.
+        if not self.is_module:
+            return []
+        if '__all__' not in self.names:
+            return None
+
+        exports_node = self.names['__all__'][0]
+        assign = exports_node.up
+        if not isinstance(assign, ast.Assign) or len(assign.targets) != 1:
+            return None
+
+        try:
+            return ast_eval(assign.value)
+        except ValueError:
+            return None
+
     # Names
 
     def add(self, name, node):
@@ -117,6 +140,20 @@ def is_write(node):
 def is_use(node):
     return isinstance(node, ast.Name) \
        and isinstance(node.ctx, (ast.Load, ast.Del))
+
+def is_constant(node):
+    return isinstance(node, ast.Name) and node.id.isupper()
+
+def ast_eval(node):
+    if isinstance(node, ast.List):
+        return map(ast_eval, node.elts)
+    elif isinstance(node, ast.Str):
+        return node.s
+    elif isinstance(node, ast.Num):
+        return node.n
+    else:
+        raise ValueError("Don't know how to eval %s" % node.__class__.__name__)
+
 
 class TreeLinker(ast.NodeVisitor):
     def __init__(self):
@@ -220,6 +257,8 @@ def name_class(node):
         return 'import'
     elif isinstance(node, ast.FunctionDef):
         return 'function'
+    elif isinstance(node, ast.ClassDef):
+        return 'class'
     elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param) \
          or isinstance(node, ast.arguments):
         return 'param'
@@ -252,6 +291,13 @@ def main():
             if all(is_use, nodes):
                 print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
             if not scope.is_class and all(is_write, nodes):
+                if name == '__all__' and scope.is_module:
+                    continue
+                elif scope.exports is not None and name in scope.exports:
+                    continue
+                elif scope.exports is None and not name.startswith('_'):
+                    if isinstance(node, (ast.FunctionDef, ast.ClassDef)) or is_constant(node):
+                        continue
                 print '%s %s is never used at %d:%d' % \
                       (name_class(node).title(), name, node.lineno, node.col_offset)
 
