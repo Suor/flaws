@@ -118,6 +118,17 @@ def is_use(node):
     return isinstance(node, ast.Name) \
        and isinstance(node.ctx, (ast.Load, ast.Del))
 
+class TreeLinker(ast.NodeVisitor):
+    def __init__(self):
+        self.stack = deque()
+
+    def visit(self, node):
+        if self.stack:
+            node.up = self.stack[-1]
+        self.stack.append(node)
+        self.generic_visit(node)
+        self.stack.pop()
+
 
 class ScopeBuilder(ast.NodeVisitor):
     def __init__(self):
@@ -229,6 +240,8 @@ def main():
         source = slurp(filename)
         tree = ast.parse(source, filename=filename)
         # print dump(tree)
+
+        TreeLinker().visit(tree)
 
         sb = ScopeBuilder()
         top = sb.visit(tree)
