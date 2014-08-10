@@ -3,7 +3,12 @@ Iron
 
 A python code static analyzer. Catches common errors.
 
-Under development, doesn't even work yet.
+In early pre-alpha, but already does something useful. It catches:
+
+- undefined names (possible typos)
+- unused imports
+- unused variables/values/parameters
+- unused/not exported functions/classes/variables/constants
 
 
 Plans
@@ -11,10 +16,6 @@ Plans
 
 Things to catch:
 
-- find undefined names (possible typos)
-- unused imports
-- unused variables/values/parameters
-- unused/not exported functions/classes
 - unused private methods
 - commented out code
 - commented out debug code
@@ -27,8 +28,9 @@ Things to catch:
 Globally:
 
 - unused/not exported functions/classes/variables
-- unused parameters
-- wrong defaults for parameters (always overridden)
+- never passed parameters
+- unused parameter defaults
+- passing the same value to a parameter everywhere
 - globally dead code
 - global type inferencing?
 - outdated dependencies in requirements.txt or setup.py?
