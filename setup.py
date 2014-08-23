@@ -1,23 +1,25 @@
 from setuptools import setup
 
 setup(
-    name='iron',
+    name='flaws',
     version='0.0.1',
     author='Alexander Schepanovski',
     author_email='suor.web@gmail.com',
 
-    description='Iron out your python code.',
+    description='Finds flaws in your python code',
     long_description=open('README.rst').read(),
     url='http://github.com/Suor/iron',
     license='BSD',
 
-    py_modules=['iron', 'astpp'],
+    py_modules=['astpp'],
+    packages=['flaws'],
+
     install_requires=[
         'funcy>=1.1',
     ],
     entry_points = {
         'console_scripts': [
-            'iron = iron:main',
+            'flaws = flaws:main',
         ],
     },
 
