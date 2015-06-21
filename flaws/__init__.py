@@ -31,7 +31,7 @@ def main():
         for scope, name, nodes in top.walk():
             node = nodes[0]
             if all(is_use, nodes):
-                print 'Undefined variable %s at %d:%d' % (name, node.lineno, node.col_offset)
+                print 'Undefined variable %s at %s:%d:%d' % (name, filename, node.lineno, node.col_offset)
             if not scope.is_class and all(is_write, nodes):
                 if name == '__all__' and scope.is_module:
                     continue
@@ -40,8 +40,8 @@ def main():
                 elif scope.exports is None and not name.startswith('_'):
                     if isinstance(node, (ast.FunctionDef, ast.ClassDef)) or is_constant(node):
                         continue
-                print '%s %s is never used at %d:%d' % \
-                      (name_class(node).title(), name, node.lineno, node.col_offset)
+                print '%s %s is never used at %s:%d:%d' % \
+                      (name_class(node).title(), name, filename, node.lineno, node.col_offset)
 
 
 if __name__ == '__main__':
