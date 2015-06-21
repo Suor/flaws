@@ -8,7 +8,7 @@ def is_write(node):
 
 def is_use(node):
     return isinstance(node, ast.Name) \
-       and isinstance(node.ctx, (ast.Load, ast.Del))
+        and isinstance(node.ctx, (ast.Load, ast.Del))
 
 def is_constant(node):
     return isinstance(node, ast.Name) and node.id.isupper()
@@ -32,7 +32,7 @@ def name_class(node):
     elif isinstance(node, ast.ClassDef):
         return 'class'
     elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param) \
-         or isinstance(node, ast.arguments):
+            or isinstance(node, ast.arguments):
         return 'param'
     else:
         return 'variable'
@@ -61,4 +61,3 @@ class AnnotatedSourceGenerator(SourceGenerator):
         SourceGenerator.visit(self, node)
         if not isinstance(node, (ast.Num, ast.Str)) and hasattr(node, 'val'):
             self.write(colored(' (%s)' % node.val, 'green'))
-

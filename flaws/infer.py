@@ -2,7 +2,6 @@ import operator
 from collections import deque
 import ast
 
-from .asttools import nodes_str
 from funcy import joining
 
 
@@ -67,7 +66,6 @@ class Inferer(astor.ExplicitNodeVisitor):
 
     def pop_env(self):
         self.envs.pop()
-
 
     def visit_Module(self, node):
         self.push_env(node)

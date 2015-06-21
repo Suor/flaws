@@ -3,8 +3,7 @@ from collections import defaultdict, deque
 
 from funcy import cached_property, print_exits, any, icat, empty
 
-from .asttools import nodes_str, is_write
-
+from .asttools import nodes_str, is_write, ast_eval
 
 
 # TODO: distinguish python versions
@@ -53,7 +52,6 @@ class Scope(object):
         if '__all__' not in self.names:
             return None
 
-
         exports_node = self.names['__all__'][0]
         assign = exports_node.up
         if not isinstance(assign, ast.Assign) or len(assign.targets) != 1:
@@ -99,7 +97,8 @@ class Scope(object):
                 self.unscoped_names.pop(name)
 
     def pass_unscoped(self, other_scope):
-        # print "Passing unscoped", self.unscoped_names.keys(), "from", self.node, "to", other_scope.node
+        # print "Passing unscoped", self.unscoped_names.keys(), \
+        # "from", self.node, "to", other_scope.node
         for name, nodes in self.unscoped_names.items():
             if name in other_scope.names:
                 other_scope.names[name].extend(nodes)

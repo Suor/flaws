@@ -3,7 +3,7 @@ import sys
 import ast
 
 from funcy import all
-from astpp import dump # use astor?
+import astor
 
 from .asttools import is_write, is_use, is_constant, name_class, node_str, to_source
 from .scopes import TreeLinker, ScopeBuilder
@@ -21,14 +21,13 @@ def main():
 
         source = slurp(filename)
         tree = ast.parse(source, filename=filename)
-        # print dump(tree)
+        # print astor.dump(tree)
 
         TreeLinker().visit(tree)
 
         ScopeBuilder().visit(tree)
         print tree.scope
 
-        import astor
         print astor.dump(tree)
         Inferer().visit(tree)
 
@@ -41,7 +40,8 @@ def main():
         for scope, name, nodes in tree.scope.walk():
             node = nodes[0]
             if all(is_use, nodes):
-                print 'Undefined variable %s at %s:%d:%d' % (name, filename, node.lineno, node.col_offset)
+                print 'Undefined variable %s at %s:%d:%d' \
+                      % (name, filename, node.lineno, node.col_offset)
             if not scope.is_class and all(is_write, nodes):
                 if name == '__all__' and scope.is_module:
                     continue
