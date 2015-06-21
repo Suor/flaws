@@ -8,7 +8,7 @@ setup(
 
     description='Finds flaws in your python code',
     long_description=open('README.rst').read(),
-    url='http://github.com/Suor/iron',
+    url='http://github.com/Suor/flaws',
     license='BSD',
 
     py_modules=['astpp'],
