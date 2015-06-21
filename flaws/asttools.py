@@ -42,3 +42,23 @@ def node_str(node):
 
 def nodes_str(nodes):
     return '[%s]' % ', '.join(map(node_str, nodes))
+
+
+from astor.codegen import SourceGenerator
+from termcolor import colored
+
+def to_source(node, indent_with=' ' * 4, add_line_information=False):
+    """
+    A modified to_source() function from astor.
+    """
+    generator = AnnotatedSourceGenerator(indent_with, add_line_information)
+    generator.visit(node)
+    return ''.join(str(s) for s in generator.result)
+
+
+class AnnotatedSourceGenerator(SourceGenerator):
+    def visit(self, node):
+        SourceGenerator.visit(self, node)
+        if not isinstance(node, (ast.Num, ast.Str)) and hasattr(node, 'val'):
+            self.write(colored(' (%s)' % node.val, 'green'))
+

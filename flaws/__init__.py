@@ -5,8 +5,9 @@ import ast
 from funcy import all
 from astpp import dump # use astor?
 
+from .asttools import is_write, is_use, is_constant, name_class, node_str, to_source
 from .scopes import TreeLinker, ScopeBuilder
-from .asttools import is_write, is_use, is_constant, name_class
+from .infer import Inferer
 
 
 def slurp(filename):
@@ -24,11 +25,20 @@ def main():
 
         TreeLinker().visit(tree)
 
-        sb = ScopeBuilder()
-        top = sb.visit(tree)
-        # print top
+        ScopeBuilder().visit(tree)
+        print tree.scope
 
-        for scope, name, nodes in top.walk():
+        import astor
+        print astor.dump(tree)
+        Inferer().visit(tree)
+
+        print to_source(tree)
+
+        # for scope, name, nodes in top.walk():
+        #     for node in nodes:
+        #         print '%s = %s at %s' % (name, node.val, node_str(node))
+
+        for scope, name, nodes in tree.scope.walk():
             node = nodes[0]
             if all(is_use, nodes):
                 print 'Undefined variable %s at %s:%d:%d' % (name, filename, node.lineno, node.col_offset)

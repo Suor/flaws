@@ -1,7 +1,7 @@
 import ast
 from collections import defaultdict, deque
 
-from funcy import cached_property, print_exits, any
+from funcy import cached_property, print_exits, any, icat, empty
 
 from .asttools import nodes_str, is_write
 
@@ -39,8 +39,8 @@ class Scope(object):
     def is_class(self):
         return isinstance(self.node, ast.ClassDef)
 
+    # @print_exits
     @cached_property
-    @print_exits
     def exports(self):
         # There are several possible scenarious:
         #   1. Explicit exports
@@ -77,6 +77,7 @@ class Scope(object):
             self.names[name].append(node)
         else:
             self.unscoped_names[name].append(node)
+        node.in_scope = self
 
     def make_global(self, names):
         self.global_names.update(names)
@@ -165,7 +166,8 @@ class ScopeBuilder(ast.NodeVisitor):
             return None
 
     def push_scope(self, node):
-        self.scopes.append(Scope(self.scope, node))
+        node.scope = Scope(self.scope, node)
+        self.scopes.append(node.scope)
 
     def pop_scope(self):
         current = self.scope
@@ -173,13 +175,13 @@ class ScopeBuilder(ast.NodeVisitor):
         self.scopes.pop()
         if self.scope:
             current.pass_unscoped(self.scope)
-        return current
+        # return current
 
     # Visiting
     def visit_Module(self, node):
         self.push_scope(node)
         self.generic_visit(node)
-        return self.pop_scope()
+        self.pop_scope()
 
     def visit_Import(self, node):
         for alias in node.names:
@@ -196,7 +198,7 @@ class ScopeBuilder(ast.NodeVisitor):
 
         self.push_scope(node)
         self.visit_all(node.body)
-        return self.pop_scope()
+        self.pop_scope()
 
     def visit_FunctionDef(self, node):
         # print 'visit_FunctionDef'
@@ -216,7 +218,7 @@ class ScopeBuilder(ast.NodeVisitor):
             self.scope.add(node.args.kwarg, node.args)
         # TODO: handle kwonlyargs
         # print 'exit visit_FunctionDef', self.scope.unscoped_names
-        return self.pop_scope()
+        self.pop_scope()
 
     def visit_Name(self, node):
         # print 'Name', node.id, node.ctx
