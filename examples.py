@@ -52,3 +52,20 @@ except KeyError:
 # dict.get:
 return some_dict.get(obj.template, obj.template)
 
+
+# same thing on both sides
+if self.frequency == 'A':
+    """ pandas bug ?! if not converting to float for annual, results to 0 """
+    pd_series = pd_series.astype(float).resample(self.frequency, how=how)
+else:
+    pd_series = pd_series.astype(float).resample(self.frequency, how=how)
+
+# needless if
+if cond:
+    return True
+else:
+    return False
+# direct
+return bool(cond)
+# or
+return cond
