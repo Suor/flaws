@@ -80,7 +80,7 @@ def test_extra_statement():
     assert match(useless_if, tree) == []
 
 
-# Multistatement template
+# Multistatement template, vary names
 
 @compile_template
 def assignments():
@@ -110,3 +110,26 @@ def test_inner_partial():
         f()
     assert match(assignments, tree) == []
 
+
+def test_other_names():
+    @get_body_ast
+    def tree():
+        a = 1
+        b = a
+    assert match(assignments, tree) == [tree[0]]
+
+
+def test_name_clash():
+    @get_body_ast
+    def tree():
+        a = 1
+        a = a
+    assert match(assignments, tree) == []
+
+
+def test_name_mismatch():
+    @get_body_ast
+    def tree():
+        a = 1
+        b = c
+    assert match(assignments, tree) == []
