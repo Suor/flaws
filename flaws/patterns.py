@@ -82,6 +82,8 @@ def match(template, tree):
                 _match(value)
                 stack.pop()
         elif isinstance(node, list) and node:
+            # NOTE: we treat lists as recursive data structures here.
+            #       0 means go to list head, 1 to tail.
             stack.append(0)
             _match(node[0])
             stack.pop()
@@ -89,8 +91,6 @@ def match(template, tree):
             stack.append(1)
             _match(node[1:])
             stack.pop()
-        else:
-            pass # Don't need to go deeper on scalars
 
     _match(tree)
     return [m['node'] for m in matches + potential]
