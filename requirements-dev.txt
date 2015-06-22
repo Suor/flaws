@@ -1,0 +1,4 @@
+astor==0.5
+funcy==1.5
+pytest==2.7.1
+termcolor==1.1.0
