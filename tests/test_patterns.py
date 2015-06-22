@@ -78,3 +78,35 @@ def test_extra_statement():
             return False
             pass
     assert match(useless_if, tree) == []
+
+
+# Multistatement template
+
+@compile_template
+def assignments():
+    x = 1
+    y = x
+
+
+def test_multi():
+    @get_body_ast
+    def tree():
+        x = 1
+        y = x
+    assert match(assignments, tree) == [tree[0]]
+
+
+def test_partial():
+    @get_body_ast
+    def tree():
+        x = 1
+    assert match(assignments, tree) == []
+
+
+def test_inner_partial():
+    @get_body_ast
+    def tree():
+        x = 1
+        f()
+    assert match(assignments, tree) == []
+

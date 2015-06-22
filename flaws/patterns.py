@@ -61,7 +61,7 @@ def match(template, tree):
                 print 'confirm', start_stack, start_node
                 matches.append((start_stack, start_node))
             else:
-                path = stack[len(start_stack)-1:]
+                path = stack[len(start_stack):]
                 print 'path', path
                 sub_template = get_sub_template(template, path)
                 print 'sub', sub_template
@@ -76,7 +76,7 @@ def match(template, tree):
         # siblings - pos >= len(template) and node_matches(node, template[0]):
         # if isinstance(node, list) and len(node) >= len(template):
         if node_matches(node, template):
-            potential.append((stack[:] + [0], node[0]))
+            potential.append((stack[:], node[0]))
             print 'potential', potential[-1]
 
         # Go deeper
