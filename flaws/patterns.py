@@ -32,13 +32,6 @@ def match_tree(tree):
         for node in matching_nodes
     ]
 
-# def match_template(template, tree):
-#     matching_nodes = match(template, tree)
-#     return [
-#         {'type': 'useless_if', 'lineno': node.lineno}
-#         for node in matching_nodes
-#     ]
-
 def match(template, tree):
     print 'tree'
     print astor.dump(tree)
@@ -49,7 +42,6 @@ def match(template, tree):
     potential = []
     matches = []
 
-    # def _match(node, pos, siblings):
     def _match(node):
         print 'stack', stack, 'node', node
 
@@ -73,8 +65,6 @@ def match(template, tree):
         potential[:] = p
 
         # Check if template starts here
-        # siblings - pos >= len(template) and node_matches(node, template[0]):
-        # if isinstance(node, list) and len(node) >= len(template):
         if node_matches(node, template):
             potential.append((stack[:], node[0]))
             print 'potential', potential[-1]
@@ -97,7 +87,6 @@ def match(template, tree):
             pass # Don't need to go deeper on scalars
 
     _match(tree)
-    # _match(tree, 0, 1)
     return [node for _, node in matches + potential]
 
 def node_matches(node, template_node):
@@ -144,10 +133,6 @@ class TemplateCompiler(ast.NodeTransformer):
             return  isa(cls)
         else:
             return node
-
-# class AbstractAST(ast.AST):
-#     def __init__(self, matches):
-#         self.matches = matches
 
 
 def get_body_ast(func):
