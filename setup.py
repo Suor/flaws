@@ -11,7 +11,6 @@ setup(
     url='http://github.com/Suor/flaws',
     license='BSD',
 
-    py_modules=['astpp'],
     packages=['flaws'],
 
     install_requires=[
