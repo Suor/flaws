@@ -3,7 +3,7 @@ import inspect
 import sys
 import textwrap
 
-from funcy import isa
+from funcy import zipdict
 import astor
 
 
@@ -11,11 +11,21 @@ class Pattern(object):
     pass
 
 class UselessIf(Pattern):
-    def template():
-        if ast.expr:
+    def template(cond=ast.expr):
+        if cond:
             return True
         else:
             return False
+
+    def suggestion():
+        return bool(cond)
+
+class MapLambda(Pattern):
+    def template(body=ast.expr, seq=ast.expr):
+        map(lambda var: body, seq)
+
+    def suggestion():
+        [body for var in seq]
 
 
 def match_tree(tree):
@@ -130,19 +140,28 @@ def get_sub_template(template, path):
 
 
 def compile_template(func):
-    return map(TemplateCompiler().visit, get_body_ast(func))
+    spec = inspect.getargspec(func)
+    assert len(spec.args) == len(spec.defaults or []), "All template args should have AST classes"
+
+    compiler = TemplateCompiler(zipdict(spec.args, spec.defaults or []))
+    return map(compiler.visit, get_body_ast(func))
 
 class TemplateCompiler(ast.NodeTransformer):
+    def __init__(self, args):
+        self.args = args
+
     def visit_Attribute(self, node):
         if isinstance(node.value, ast.Name) and node.value.id == 'ast':
             cls = getattr(ast, node.attr)
-            return lambda node, _: isinstance(node, cls)
+            return lambda n, _: isinstance(n, cls)
         else:
             return node
 
     def visit_Name(self, node):
         if node.id in {'True', 'False', 'None'}:
             return node
+        elif node.id in self.args:
+            return lambda n, _: isinstance(n, self.args[node.id])
 
         canonical_id = node.id
 

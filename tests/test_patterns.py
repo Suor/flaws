@@ -5,8 +5,8 @@ from flaws.patterns import compile_template, match, get_body_ast
 
 
 @compile_template
-def useless_if():
-    if ast.expr:
+def useless_if(cond=ast.expr):
+    if cond:
         return True
     else:
         return False
