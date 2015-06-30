@@ -75,7 +75,7 @@ def match(template, tree):
         potential[:] = next_potential
 
         # Check if template starts here
-        context = {'names': {}, 'rev': {}}
+        context = {'names': {}, 'rev': {}, 'captures': {}}
         if node_matches(node, template, context):
             # potential.append((stack[:], node[0]))
             potential.append({
@@ -103,7 +103,12 @@ def match(template, tree):
             stack.pop()
 
     _match(tree)
-    return [m['node'] for m in matches + potential]
+
+    results = []
+    for m in matches + potential:
+        m['node'].captures = m['context']['captures']
+        results.append(m['node'])
+    return results
 
 def node_matches(node, template_node, context):
     if isinstance(template_node, ast.AST):
@@ -161,7 +166,12 @@ class TemplateCompiler(ast.NodeTransformer):
         if node.id in {'True', 'False', 'None'}:
             return node
         elif node.id in self.args:
-            return lambda n, _: isinstance(n, self.args[node.id])
+            def match_capture(n, context):
+                if isinstance(n, self.args[node.id]):
+                    context['captures'][node.id] = n
+                    return True
+                return False
+            return match_capture
 
         canonical_id = node.id
 
