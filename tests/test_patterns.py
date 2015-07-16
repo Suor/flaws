@@ -133,3 +133,17 @@ def test_name_mismatch():
         a = 1
         b = c
     assert match(assignments, tree) == []
+
+
+def test_subexpr():
+    @compile_template
+    def expr():
+        x + 1
+
+    @get_body_ast
+    def tree():
+        y = x + 1
+
+    import astor
+
+    assert match(expr, tree) == [tree[0].value]

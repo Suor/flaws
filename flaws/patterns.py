@@ -3,7 +3,7 @@ import inspect
 import sys
 import textwrap
 
-from funcy import zipdict
+from funcy import zipdict, is_list
 import astor
 
 
@@ -80,7 +80,8 @@ def match(template, tree):
             # potential.append((stack[:], node[0]))
             potential.append({
                 'stack': stack[:],
-                'node': node[0],
+                # Always refer to a first node even when template is a list
+                'node': node[0] if is_list(node) else node,
                 'context': context,
             })
             print 'potential', potential[-1]
@@ -149,7 +150,11 @@ def compile_template(func):
     assert len(spec.args) == len(spec.defaults or []), "All template args should have AST classes"
 
     compiler = TemplateCompiler(zipdict(spec.args, spec.defaults or []))
-    return map(compiler.visit, get_body_ast(func))
+    template = map(compiler.visit, get_body_ast(func))
+    # Strip Expr node wrapping single expression to let it match inside statement
+    if len(template) == 1 and isinstance(template[0], ast.Expr):
+        return template[0].value
+    return template
 
 class TemplateCompiler(ast.NodeTransformer):
     def __init__(self, args):
