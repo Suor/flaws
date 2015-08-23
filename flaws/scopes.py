@@ -114,6 +114,9 @@ class Scope(object):
             for scope, name, nodes in child.walk():
                 yield scope, name, nodes
 
+    def is_builtin(self, name):
+        return self.is_module and name in BUILTINS
+
     # Stringification
 
     def dump(self, indent=''):
@@ -238,8 +241,8 @@ class ScopeBuilder(ast.NodeVisitor):
     def visit_Name(self, node):
         # print 'Name', node.id, node.ctx
         # TODO: respect assignments to these or make it a separate error
-        if node.id not in BUILTINS:
-            self.scope.add(node.id, node)
+        # if node.id not in BUILTINS:
+        self.scope.add(node.id, node)
 
     def visit_Global(self, node):
         self.scope.make_global(node.names)
