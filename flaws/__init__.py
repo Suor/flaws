@@ -43,7 +43,7 @@ def main():
                 print 'Undefined variable %s at %s:%d:%d' \
                       % (name, filename, node.lineno, node.col_offset)
             if not scope.is_class and all(is_write, nodes):
-                if name == '__all__' and scope.is_module:
+                if name == '__all__' and scope.is_module or name == '_':
                     continue
                 elif scope.exports is not None and name in scope.exports:
                     continue
