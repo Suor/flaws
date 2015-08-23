@@ -1,7 +1,7 @@
 import ast
 from collections import defaultdict, deque
 
-from funcy import cached_property, print_exits, any, icat, empty
+from funcy import cached_property, print_exits, any, icat, empty, iterate, takewhile
 
 from .asttools import nodes_str, is_write, ast_eval
 
@@ -22,6 +22,7 @@ class Scope(object):
         self.names = defaultdict(list)
         self.unscoped_names = defaultdict(list)
         self.global_names = set()
+        self.wildcards = []
 
     @cached_property
     def module(self):
@@ -37,6 +38,11 @@ class Scope(object):
     @property
     def is_class(self):
         return isinstance(self.node, ast.ClassDef)
+
+    @property
+    def has_wildcards(self):
+        parents = takewhile(bool, iterate(lambda s: s.parent, self))
+        return any(s.wildcards for s in parents)
 
     # @print_exits
     @cached_property
@@ -187,7 +193,11 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_Import(self, node):
         for alias in node.names:
-            self.scope.add(alias.asname or alias.name, node)
+            name = alias.asname or alias.name
+            if name == '*':
+                self.scope.wildcards.append(node)
+            else:
+                self.scope.add(name, node)
 
     def visit_ImportFrom(self, node):
         if node.module != '__future__':

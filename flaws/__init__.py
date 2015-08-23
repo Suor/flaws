@@ -39,7 +39,7 @@ def main():
 
         for scope, name, nodes in tree.scope.walk():
             node = nodes[0]
-            if all(is_use, nodes) and not scope.is_builtin(name):
+            if all(is_use, nodes) and not scope.is_builtin(name) and not scope.has_wildcards:
                 print 'Undefined variable %s at %s:%d:%d' \
                       % (name, filename, node.lineno, node.col_offset)
             if not scope.is_class and all(is_write, nodes):
