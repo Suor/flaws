@@ -25,9 +25,9 @@ def test_capture():
     assert astor.to_source(m.captures['cond']) == '(x < 12)'
 
 
-def test_two_captures():
+def test_more_captures():
     @compile_template
-    def map_lambda(body=ast.expr, seq=ast.expr):
+    def map_lambda(var=ast.Name, body=ast.expr, seq=ast.expr):
         map(lambda var: body, seq)
 
     @get_body_ast

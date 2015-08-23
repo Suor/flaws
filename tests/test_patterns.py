@@ -83,7 +83,7 @@ def test_extra_statement():
 # Multistatement template, vary names
 
 @compile_template
-def assignments():
+def assignments(x=ast.Name, y=ast.Name):
     x = 1
     y = x
 

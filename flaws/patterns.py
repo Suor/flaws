@@ -177,26 +177,27 @@ class TemplateCompiler(ast.NodeTransformer):
             return node
         elif node.id in self.args:
             def match_capture(n, context):
-                if isinstance(n, self.args[node.id]):
-                    context['captures'][node.id] = n
-                    return True
-                return False
-            return match_capture
+                if not isinstance(n, self.args[node.id]):
+                    return False
 
-        canonical_id = node.id
+                context['captures'][node.id] = n
 
-        def sticky_name(name, context):
-            if (canonical_id in context['names']) != (name in context['rev']):
-                return False
-            if canonical_id in context['names']:
-                return name == context['names'][canonical_id]
-            else:
-                context['names'][canonical_id] = name
-                context['rev'][name] = canonical_id
+                # Sticky variable names
+                if self.args[node.id] == ast.Name:
+                    if (node.id in context['names']) != (n.id in context['rev']):
+                        return False
+                    if node.id in context['names']:
+                        return n.id == context['names'][node.id]
+                    else:
+                        context['names'][node.id] = n.id
+                        context['rev'][n.id] = node.id
+                        return True
+
                 return True
 
-        node.id = sticky_name
-        return node
+            return match_capture
+        else:
+            return node
 
 
 def get_body_ast(func):
