@@ -14,7 +14,7 @@ def is_constant(node):
     return isinstance(node, ast.Name) and node.id.isupper()
 
 def ast_eval(node):
-    if isinstance(node, ast.List):
+    if isinstance(node, (ast.List, ast.Tuple)):
         return map(ast_eval, node.elts)
     elif isinstance(node, ast.Str):
         return node.s
