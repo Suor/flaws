@@ -3,7 +3,7 @@ import inspect
 import sys
 import textwrap
 
-from funcy import zipdict, is_list
+from funcy import zipdict, is_list, keep
 import astor
 
 
@@ -103,6 +103,8 @@ def node_matches(node, template_node, context):
     elif isinstance(template_node, list):
         return isinstance(node, list) and len(node) >= len(template_node) \
             and (template_node == [] or node_matches(node[0], template_node[0], context))
+    elif template_node is None:
+        return node is None
     elif isinstance(template_node, (str, int, float)):
         return node == template_node
     else:
@@ -142,9 +144,26 @@ def compile_template(func):
         return template[0].value
     return template
 
+
 class TemplateCompiler(ast.NodeTransformer):
     def __init__(self, args):
         self.args = args
+
+    def generic_visit(self, node):
+        """
+        Modified .generic_visit() from NodeTransformer allows callables in tree.
+        """
+        for field, old_value in ast.iter_fields(node):
+            old_value = getattr(node, field, None)
+            if isinstance(old_value, list):
+                old_value[:] = keep(self.visit, old_value)
+            elif isinstance(old_value, ast.AST):
+                new_node = self.visit(old_value)
+                if new_node is None:
+                    delattr(node, field)
+                else:
+                    setattr(node, field, new_node)
+        return node
 
     def visit_Attribute(self, node):
         if isinstance(node.value, ast.Name) and node.value.id == 'ast':
