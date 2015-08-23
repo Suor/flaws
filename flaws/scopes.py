@@ -219,6 +219,22 @@ class ScopeBuilder(ast.NodeVisitor):
         # print 'exit visit_FunctionDef', self.scope.unscoped_names
         self.pop_scope()
 
+    def visit_Lambda(self, node):
+        self.push_scope(node)
+        self.visit_all(node.args.args)
+        # Visit vararg and kwarg
+        # NOTE: arguments node doesn't have lineno and col_offset,
+        #       so we copy them from a function node
+        node.args.lineno = node.lineno
+        node.args.col_offset = node.col_offset
+        if node.args.vararg:
+            self.scope.add(node.args.vararg, node.args)
+        if node.args.kwarg:
+            self.scope.add(node.args.kwarg, node.args)
+        # TODO: handle kwonlyargs
+        self.visit(node.body)
+        self.pop_scope()
+
     def visit_Name(self, node):
         # print 'Name', node.id, node.ctx
         # TODO: respect assignments to these or make it a separate error
