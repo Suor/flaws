@@ -28,20 +28,6 @@ class MapLambda(Pattern):
         [body for var in seq]
 
 
-def match_tree(tree):
-    print 'tree'
-    print astor.dump(tree)
-    print 'template'
-    template = get_body_ast(UselessIf.template)
-    template = map(TemplateCompiler().visit, template)
-    print astor.dump(template)
-
-    matching_nodes = match(template, tree)
-    return [
-        {'type': 'useless_if', 'lineno': node.lineno}
-        for node in matching_nodes
-    ]
-
 def match(template, tree):
     print 'tree'
     print astor.dump(tree)
