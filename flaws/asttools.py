@@ -47,6 +47,31 @@ def nodes_str(nodes):
     return '[%s]' % ', '.join(map(node_str, nodes))
 
 
+# Parse to AST
+
+import sys
+import inspect
+import textwrap
+
+def get_body_ast(func):
+    return get_ast(func).body[0].body
+
+def get_ast(func):
+    # Get function source
+    source = inspect.getsource(func)
+    source = textwrap.dedent(source)
+
+    # Preserve line numbers
+    source = '\n' * (func.__code__.co_firstlineno - 2) + source
+
+    return ast.parse(source, func_file(func), 'single')
+
+def func_file(func):
+    return getattr(sys.modules[func.__module__], '__file__', '<nofile>')
+
+
+# Code generation
+
 from astor.codegen import SourceGenerator
 from termcolor import colored
 

@@ -1,9 +1,9 @@
 import ast
-import textwrap
 
 import astor
 
-from flaws.patterns import compile_template, match, get_body_ast
+from flaws.asttools import get_body_ast
+from flaws.patterns import compile_template, match
 
 
 def test_capture():

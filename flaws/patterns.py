@@ -6,6 +6,8 @@ import textwrap
 from funcy import zipdict, is_list, keep
 import astor
 
+from .asttools import get_body_ast
+
 
 class Pattern(object):
     pass
@@ -198,20 +200,3 @@ class TemplateCompiler(ast.NodeTransformer):
             return match_capture
         else:
             return node
-
-
-def get_body_ast(func):
-    return get_ast(func).body[0].body
-
-def get_ast(func):
-    # Get function source
-    source = inspect.getsource(func)
-    source = textwrap.dedent(source)
-
-    # Preserve line numbers
-    source = '\n' * (func.__code__.co_firstlineno - 2) + source
-
-    return ast.parse(source, func_file(func), 'single')
-
-def func_file(func):
-    return getattr(sys.modules[func.__module__], '__file__', '<nofile>')
