@@ -58,11 +58,11 @@ def main():
 
         for scope, name, nodes in tree.scope.walk():
             node = nodes[0]
-            if all(is_use, nodes) and not scope.is_builtin(name) and not scope.has_wildcards:
+            if all(is_use, nodes) and not scope.is_global(name) and not scope.has_wildcards:
                 print '%s:%d:%d: undefined variable %s' \
                       % (filename, node.lineno, node.col_offset, name)
             if not scope.is_class and all(is_write, nodes):
-                if name == '__all__' and scope.is_module or name == '_':
+                if name in {'__all__', '__version__'} and scope.is_module or name == '_':
                     continue
                 elif scope.exports is not None and name in scope.exports:
                     continue

@@ -9,6 +9,7 @@ from .asttools import nodes_str, is_write, ast_eval
 # TODO: distinguish python versions
 import __builtin__
 BUILTINS = set(dir(__builtin__))
+GLOBALS = BUILTINS | {'__name__', '__file__'}
 
 
 class Scope(object):
@@ -106,7 +107,7 @@ class Scope(object):
 
     def _resolve_unscoped(self, from_scope):
         for name, nodes in list(from_scope.unscoped_names.items()):
-            if name in self.names or self.is_module and name in BUILTINS:
+            if name in self.names or self.is_global(name):
                 self.names[name].extend(nodes)
                 from_scope.unscoped_names.pop(name)
             elif self.is_module:
@@ -127,8 +128,8 @@ class Scope(object):
             for scope, name, nodes in child.walk():
                 yield scope, name, nodes
 
-    def is_builtin(self, name):
-        return self.is_module and name in BUILTINS
+    def is_global(self, name):
+        return self.is_module and name in GLOBALS
 
     # Stringification
 
@@ -257,7 +258,6 @@ class ScopeBuilder(ast.NodeVisitor):
     def visit_Name(self, node):
         # print 'Name', node.id, node.ctx
         # TODO: respect assignments to these or make it a separate error
-        # if node.id not in BUILTINS:
         self.scope.add(node.id, node)
 
     def visit_Global(self, node):
