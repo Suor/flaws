@@ -87,8 +87,6 @@ class Scope(object):
         self.global_names.update(names)
 
     def resolve(self):
-        # print 'RESOVE', self.node, self.unscoped_names.keys()
-
         # Extract global names to module scope
         for name in self.global_names:
             nodes = self.unscoped_names.pop(name, [])
@@ -102,15 +100,24 @@ class Scope(object):
                 self.names[name].extend(nodes)
                 self.unscoped_names.pop(name)
 
-    def pass_unscoped(self, other_scope):
-        # print "Passing unscoped", self.unscoped_names.keys(), \
-        # "from", self.node, "to", other_scope.node
-        for name, nodes in self.unscoped_names.items():
-            if name in other_scope.names:
-                other_scope.names[name].extend(nodes)
-            else:
-                other_scope.unscoped_names[name].extend(nodes)
-        self.unscoped_names = empty(self.unscoped_names)
+        # Resolve nested
+        for scope in self.walk_scopes():
+            self._resolve_unscoped(scope)
+
+    def _resolve_unscoped(self, from_scope):
+        for name, nodes in list(from_scope.unscoped_names.items()):
+            if name in self.names or self.is_module and name in BUILTINS:
+                self.names[name].extend(nodes)
+                from_scope.unscoped_names.pop(name)
+            elif self.is_module:
+                from_scope.names[name].extend(nodes)
+                from_scope.unscoped_names.pop(name)
+
+    def walk_scopes(self):
+        yield self
+        for child in self.children:
+            for scope in child.walk_scopes():
+                yield scope
 
     def walk(self):
         for name, nodes in self.names.items():
@@ -178,12 +185,8 @@ class ScopeBuilder(ast.NodeVisitor):
         self.scopes.append(node.scope)
 
     def pop_scope(self):
-        current = self.scope
-        current.resolve()
+        self.scope.resolve()
         self.scopes.pop()
-        if self.scope:
-            current.pass_unscoped(self.scope)
-        # return current
 
     # Visiting
     def visit_Module(self, node):
@@ -195,6 +198,8 @@ class ScopeBuilder(ast.NodeVisitor):
         for alias in node.names:
             name = alias.asname or alias.name
             if name == '*':
+                if not self.scope.is_module:
+                    print 'WARN: wildcard import in nested scope'
                 self.scope.wildcards.append(node)
             else:
                 self.scope.add(name, node)
