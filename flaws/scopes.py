@@ -202,6 +202,7 @@ class ScopeBuilder(ast.NodeVisitor):
                     print 'WARN: wildcard import in nested scope'
                 self.scope.wildcards.append(node)
             else:
+                name = name.split('.')[0]
                 self.scope.add(name, node)
 
     def visit_ImportFrom(self, node):
