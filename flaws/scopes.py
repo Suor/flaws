@@ -256,3 +256,8 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_Global(self, node):
         self.scope.make_global(node.names)
+
+
+def fill_scopes(tree):
+    TreeLinker().visit(tree)
+    ScopeBuilder().visit(tree)
