@@ -40,8 +40,8 @@ def main():
         for scope, name, nodes in tree.scope.walk():
             node = nodes[0]
             if all(is_use, nodes) and not scope.is_builtin(name) and not scope.has_wildcards:
-                print 'Undefined variable %s at %s:%d:%d' \
-                      % (name, filename, node.lineno, node.col_offset)
+                print '%s:%d:%d: undefined variable %s' \
+                      % (filename, node.lineno, node.col_offset, name)
             if not scope.is_class and all(is_write, nodes):
                 if name == '__all__' and scope.is_module or name == '_':
                     continue
@@ -50,8 +50,8 @@ def main():
                 elif scope.exports is None and not name.startswith('_'):
                     if isinstance(node, (ast.FunctionDef, ast.ClassDef)) or is_constant(node):
                         continue
-                print '%s %s is never used at %s:%d:%d' % \
-                      (name_class(node).title(), name, filename, node.lineno, node.col_offset)
+                print '%s:%d:%d: %s %s is never used' % \
+                      (filename, node.lineno, node.col_offset, name_class(node).title(), name)
 
 
 if __name__ == '__main__':
