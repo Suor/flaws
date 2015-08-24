@@ -72,7 +72,7 @@ def main():
                 elif is_param(node) and name in {'self', 'cls'}:
                     continue
                 print '%s:%d:%d: %s %s is never used' % \
-                      (filename, node.lineno, node.col_offset, name_class(node).title(), name)
+                      (filename, node.lineno, node.col_offset, name_class(node), name)
 
 
 if __name__ == '__main__':
