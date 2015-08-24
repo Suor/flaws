@@ -13,6 +13,10 @@ def is_use(node):
 def is_constant(node):
     return isinstance(node, ast.Name) and node.id.isupper()
 
+def is_param(node):
+    return isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param)
+
+
 def ast_eval(node):
     if isinstance(node, (ast.List, ast.Tuple)):
         return map(ast_eval, node.elts)
@@ -31,8 +35,7 @@ def name_class(node):
         return 'function'
     elif isinstance(node, ast.ClassDef):
         return 'class'
-    elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param) \
-            or isinstance(node, ast.arguments):
+    elif is_param(node) or isinstance(node, ast.arguments):
         return 'param'
     else:
         return 'variable'

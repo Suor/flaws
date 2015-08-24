@@ -5,7 +5,7 @@ import ast
 from funcy import all
 import astor
 
-from .asttools import is_write, is_use, is_constant, name_class, node_str, to_source
+from .asttools import is_write, is_use, is_constant, is_param, name_class, node_str, to_source
 from .scopes import TreeLinker, ScopeBuilder
 from .infer import Inferer
 
@@ -50,6 +50,9 @@ def main():
                 elif scope.exports is None and not name.startswith('_'):
                     if isinstance(node, (ast.FunctionDef, ast.ClassDef)) or is_constant(node):
                         continue
+                # TODO: check that it is method/classmethod
+                elif is_param(node) and name in {'self', 'cls'}:
+                    continue
                 print '%s:%d:%d: %s %s is never used' % \
                       (filename, node.lineno, node.col_offset, name_class(node).title(), name)
 
