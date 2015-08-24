@@ -5,7 +5,8 @@ import ast
 from funcy import all
 import astor
 
-from .asttools import is_write, is_use, is_constant, is_param, name_class, node_str, to_source
+from .asttools import (is_write, is_use, is_constant, is_param, is_import,
+                       name_class, node_str, to_source)
 from .scopes import TreeLinker, ScopeBuilder
 from .infer import Inferer
 
@@ -65,9 +66,8 @@ def main():
                     continue
                 elif scope.exports is not None and name in scope.exports:
                     continue
-                elif scope.exports is None and not name.startswith('_'):
-                    if isinstance(node, (ast.FunctionDef, ast.ClassDef)) or is_constant(node):
-                        continue
+                elif scope.exports is None and not name.startswith('_') and not is_import(node):
+                    continue
                 # TODO: check that it is method/classmethod
                 elif is_param(node) and name in {'self', 'cls'}:
                     continue

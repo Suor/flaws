@@ -16,6 +16,9 @@ def is_constant(node):
 def is_param(node):
     return isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param)
 
+def is_import(node):
+    return isinstance(node, (ast.Import, ast.ImportFrom))
+
 
 def ast_eval(node):
     if isinstance(node, (ast.List, ast.Tuple)):
