@@ -15,23 +15,41 @@ def slurp(filename):
         return f.read()
 
 
+class MapLambda(object):
+    def template(body=ast.expr, seq=ast.expr):
+        map(lambda var: body, seq)
+
+    def suggestion():
+        [body for var in seq]
+
+    # def template(cond=ast.expr):
+    #     if cond:
+    #         return True
+    #     else:
+    #         return False
+
+
 def main():
     for filename in sys.argv[1:]:
-        print '> Analyzing %s...' % filename
+        # print '> Analyzing %s...' % filename
 
         source = slurp(filename)
         tree = ast.parse(source, filename=filename)
         # print astor.dump(tree)
 
+        # from .patterns import match, compile_template
+        # template = compile_template(MapLambda.template)
+        # print match(template, tree)
+
         TreeLinker().visit(tree)
 
         ScopeBuilder().visit(tree)
-        print tree.scope
+        # print tree.scope
 
-        print astor.dump(tree)
-        Inferer().visit(tree)
+        # print astor.dump(tree)
+        # Inferer().visit(tree)
 
-        print to_source(tree)
+        # print to_source(tree)
 
         # for scope, name, nodes in top.walk():
         #     for node in nodes:
