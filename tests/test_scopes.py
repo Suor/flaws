@@ -37,6 +37,26 @@ def test_rebind():
     }
 
 
+def test_class():
+    @_debug_scope
+    def tree():
+        class A:
+            def f():
+                return f
+
+    assert _dump(tree.scope) == {
+        'names': ['A'],
+        'children': [{
+            'name': 'ClassDef A',
+            'names': ['f'],
+            'children': [{
+                'name': 'FunctionDef f',
+                'names': ['f']
+            }]
+        }]
+    }
+
+
 # Testing utilities
 
 def _debug_scope(func):

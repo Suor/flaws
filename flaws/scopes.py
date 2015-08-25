@@ -102,8 +102,9 @@ class Scope(object):
                 self.unscoped_names.pop(name)
 
         # Resolve nested
-        for scope in self.walk_scopes():
-            self._resolve_unscoped(scope)
+        if not self.is_class:
+            for scope in self.walk_scopes():
+                self._resolve_unscoped(scope)
 
     def _resolve_unscoped(self, from_scope):
         for name, nodes in list(from_scope.unscoped_names.items()):
