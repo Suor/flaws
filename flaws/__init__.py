@@ -69,7 +69,7 @@ def main():
                 elif scope.exports is None and not name.startswith('_') and not is_import(node):
                     continue
                 # TODO: check that it is method/classmethod
-                elif is_param(node) and name in {'self', 'cls'}:
+                elif is_param(node) and name in {'self', 'cls', 'kwargs', 'request'}:
                     continue
                 print '%s:%d:%d: %s %s is never used' % \
                       (filename, node.lineno, node.col_offset, name_class(node), name)

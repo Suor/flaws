@@ -14,7 +14,8 @@ def is_constant(node):
     return isinstance(node, ast.Name) and node.id.isupper()
 
 def is_param(node):
-    return isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param)
+    return isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param) \
+        or isinstance(node, ast.arguments)
 
 def is_import(node):
     return isinstance(node, (ast.Import, ast.ImportFrom))
@@ -38,7 +39,7 @@ def name_class(node):
         return 'function'
     elif isinstance(node, ast.ClassDef):
         return 'class'
-    elif is_param(node) or isinstance(node, ast.arguments):
+    elif is_param(node):
         return 'param'
     else:
         return 'variable'
