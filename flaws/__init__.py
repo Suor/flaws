@@ -62,7 +62,7 @@ def main():
                 print '%s:%d:%d: undefined variable %s' \
                       % (filename, node.lineno, node.col_offset, name)
             if not scope.is_class and all(is_write, nodes):
-                if name in {'__all__', '__version__'} and scope.is_module or name == '_':
+                if name == '_' or scope.is_module and re.search(r'^__\w+__$', name):
                     continue
                 elif scope.exports is not None and name in scope.exports:
                     continue
