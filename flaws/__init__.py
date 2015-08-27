@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import ast
+import re
 
 from funcy import all
 import astor
