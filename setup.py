@@ -15,6 +15,8 @@ setup(
 
     install_requires=[
         'funcy>=1.1',
+        'astor',
+        'termcolor',
     ],
     entry_points = {
         'console_scripts': [
