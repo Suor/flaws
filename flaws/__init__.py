@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+import os
 import sys
 import ast
 import re
 
-from funcy import all
+from funcy import all, imapcat
 import astor
 
 from .asttools import (is_write, is_use, is_constant, is_param, is_import,
@@ -31,8 +32,18 @@ class MapLambda(object):
     #         return False
 
 
+def walk_files(path, ext='.py'):
+    for root, dirs, files in os.walk(path):
+        for d in dirs:
+            if d.startswith('.'):
+                dirs.remove(d)
+        for f in files:
+            if f.endswith(ext):
+                yield os.path.join(root, f)
+
+
 def main():
-    for filename in sys.argv[1:]:
+    for filename in imapcat(walk_files, sys.argv[1:]):
         # print '> Analyzing %s...' % filename
 
         source = slurp(filename)
