@@ -4,7 +4,7 @@ import sys
 import ast
 import re
 
-from funcy import all, imapcat
+from funcy import all, any, imapcat, cached_property
 import astor
 
 from .asttools import (is_write, is_use, is_constant, is_param, is_import,
@@ -42,7 +42,80 @@ def walk_files(path, ext='.py'):
                 yield os.path.join(root, f)
 
 
+def path_to_package(path):
+    return re.sub('^\./|(.__init__)?\.py$', '', path).replace('/', '.')
+
+
+class File(object):
+    def __init__(self, base, filename):
+        self.base = base
+        self.filename = filename
+        self.package = path_to_package(os.path.relpath(filename, base))
+
+    @cached_property
+    def tree(self):
+        source = slurp(self.filename)
+        return ast.parse(source, filename=self.filename)
+
+    @cached_property
+    def scope(self):
+        TreeLinker().visit(self.tree)
+        ScopeBuilder().visit(self.tree)
+        return self.tree.scope
+
+
+class FileSet(dict):
+    def __init__(self, root, base=None):
+        if base is None:
+            base = root
+        for filename in walk_files(root):
+            pyfile = File(base, filename)
+            self[pyfile.package] = pyfile
+
+
+import sys, ipdb, traceback
+
+def info(type, value, tb):
+    traceback.print_exception(type, value, tb)
+    print
+    ipdb.pm()
+
+sys.excepthook = info
+
+from collections import defaultdict
+
+def get_module(node, package):
+    if not node.level:
+        return node.module
+    else:
+        subs = package.split('.')
+        subs = subs[:len(subs) - node.level]
+        return '.'.join(subs + [node.module])
+
 def main():
+    used = defaultdict(set)
+    files = FileSet(sys.argv[1], sys.argv[2] if len(sys.argv) >= 3 else None)
+    for package, pyfile in files.items():
+        for name, nodes in pyfile.scope.names.items():
+            # if is_import(nodes[0]) and hasattr(nodes[0], 'module'):
+            if isinstance(nodes[0], ast.ImportFrom):
+                module = get_module(nodes[0], package)
+                if module in files:
+                    names = {alias.name for alias in nodes[0].names}
+                    used[module].update(names)
+            if any(is_use, nodes):
+                used[package].add(name)
+
+    for package, pyfile in sorted(files.items()):
+        for name, nodes in pyfile.scope.names.items():
+            if name not in used[package]:
+                print '%s:%d:%d: %s %s is never used (globally)' % \
+                      (pyfile.filename, nodes[0].lineno, nodes[0].col_offset, name_class(nodes[0]), name)
+
+
+    from IPython import embed; embed()
+    return
+
     for filename in imapcat(walk_files, sys.argv[1:]):
         # print '> Analyzing %s...' % filename
 
