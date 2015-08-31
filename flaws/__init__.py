@@ -43,14 +43,16 @@ def walk_files(path, ext='.py'):
 
 
 def path_to_package(path):
-    return re.sub('^\./|(.__init__)?\.py$', '', path).replace('/', '.')
+    dotname = re.sub(r'^\./|\.py$', '', path).replace('/', '.')
+    package = re.sub(r'\.__init__$', '', dotname)
+    return package, dotname
 
 
 class File(object):
     def __init__(self, base, filename):
         self.base = base
         self.filename = filename
-        self.package = path_to_package(os.path.relpath(filename, base))
+        self.package, self.dotname = path_to_package(os.path.relpath(filename, base))
 
     @cached_property
     def tree(self):
@@ -98,7 +100,7 @@ def main():
         for name, nodes in pyfile.scope.names.items():
             # if is_import(nodes[0]) and hasattr(nodes[0], 'module'):
             if isinstance(nodes[0], ast.ImportFrom):
-                module = get_module(nodes[0], package)
+                module = get_module(nodes[0], pyfile.dotname)
                 if module in files:
                     names = {alias.name for alias in nodes[0].names}
                     used[module].update(names)
