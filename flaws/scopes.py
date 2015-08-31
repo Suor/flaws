@@ -1,7 +1,7 @@
 import ast
 from collections import defaultdict, deque
 
-from funcy import cached_property, print_exits, any, icat, empty, iterate, takewhile
+from funcy import cached_property, print_exits, any, icat, iterate, takewhile
 
 from .asttools import nodes_str, is_write, ast_eval
 

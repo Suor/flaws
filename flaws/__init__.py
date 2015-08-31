@@ -9,7 +9,7 @@ import astor
 
 from .asttools import (is_write, is_use, is_constant, is_param, is_import,
                        name_class, node_str, to_source)
-from .scopes import TreeLinker, ScopeBuilder
+from .scopes import fill_scopes
 from .infer import Inferer
 
 
@@ -59,8 +59,7 @@ class File(object):
 
     @cached_property
     def scope(self):
-        TreeLinker().visit(self.tree)
-        ScopeBuilder().visit(self.tree)
+        fill_scopes(self.tree)
         return self.tree.scope
 
 

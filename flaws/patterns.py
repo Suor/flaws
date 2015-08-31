@@ -1,7 +1,5 @@
 import ast
 import inspect
-import sys
-import textwrap
 
 from funcy import zipdict, is_list, keep
 import astor
