@@ -18,11 +18,19 @@ def global_usage(files):
 
     for package, pyfile in files.items():
         for name, nodes in pyfile.scope.names.items():
+            # Symbol imports
             if isinstance(nodes[0], ast.ImportFrom):
                 module = get_module(nodes[0], pyfile.dotname)
                 if module in files:
                     names = {alias.name for alias in nodes[0].names}
                     used[module].update(names)
+            # Module imports
+            elif isinstance(nodes[0], ast.Import):
+                if name in files:
+                    for node in nodes[1:]:
+                        if isinstance(node, ast.Name) and isinstance(node.up, ast.Attribute):
+                            used[name].add(node.up.attr)
+            # Direct usage
             if any(is_use, nodes):
                 used[package].add(name)
 
