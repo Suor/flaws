@@ -91,7 +91,9 @@ def get_module(node, package):
     else:
         subs = package.split('.')
         subs = subs[:len(subs) - node.level]
-        return '.'.join(subs + [node.module])
+        if node.module:
+            subs.append(node.module)
+        return '.'.join(subs)
 
 def main():
     used = defaultdict(set)
