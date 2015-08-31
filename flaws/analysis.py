@@ -10,6 +10,9 @@ from .utils import slurp
 from .scopes import fill_scopes
 
 
+IGNORED_VARS = {'__all__', '__file__', '__name__', '__version__'}
+
+
 def global_usage(files):
     used = defaultdict(set)
 
@@ -25,7 +28,7 @@ def global_usage(files):
 
     for package, pyfile in sorted(files.items()):
         for name, nodes in pyfile.scope.names.items():
-            if name not in used[package]:
+            if name not in used[package] and name not in IGNORED_VARS:
                 print '%s:%d:%d: %s %s is never used (globally)' % \
                       (pyfile.filename, nodes[0].lineno, nodes[0].col_offset, name_class(nodes[0]), name)
 
