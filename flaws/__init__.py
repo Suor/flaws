@@ -40,10 +40,11 @@ sys.excepthook = info
 
 
 def main():
+    from .ext import django
+    django.register(sys.argv[1:])
+
     files = FileSet(sys.argv[1], sys.argv[2] if len(sys.argv) >= 3 else None)
     global_usage(files)
-
-    from IPython import embed; embed()
     return
 
     for filename in imapcat(walk_files, sys.argv[1:]):

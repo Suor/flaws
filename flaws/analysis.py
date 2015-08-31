@@ -8,6 +8,7 @@ from funcy import cached_property, any
 from .asttools import is_use, name_class
 from .utils import slurp
 from .scopes import fill_scopes
+from .ext import run_global_usage
 
 
 IGNORED_VARS = {'__all__', '__file__', '__name__', '__version__'}
@@ -33,6 +34,8 @@ def global_usage(files):
             # Direct usage
             if any(is_use, nodes):
                 used[package].add(name)
+
+    run_global_usage(files, used)
 
     for package, pyfile in sorted(files.items()):
         for name, nodes in pyfile.scope.names.items():
