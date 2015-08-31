@@ -4,18 +4,15 @@ import sys
 import ast
 import re
 
-from funcy import all, any, imapcat, cached_property
+from funcy import all, imapcat
 import astor
 
 from .asttools import (is_write, is_use, is_constant, is_param, is_import,
                        name_class, node_str, to_source)
 from .scopes import fill_scopes
 from .infer import Inferer
-
-
-def slurp(filename):
-    with open(filename) as f:
-        return f.read()
+from .utils import slurp
+from .analysis import global_usage, FileSet
 
 
 class MapLambda(object):
@@ -32,48 +29,6 @@ class MapLambda(object):
     #         return False
 
 
-def walk_files(path, ext='.py'):
-    for root, dirs, files in os.walk(path):
-        for d in dirs:
-            if d.startswith('.'):
-                dirs.remove(d)
-        for f in files:
-            if f.endswith(ext):
-                yield os.path.join(root, f)
-
-
-def path_to_package(path):
-    dotname = re.sub(r'^\./|\.py$', '', path).replace('/', '.')
-    package = re.sub(r'\.__init__$', '', dotname)
-    return package, dotname
-
-
-class File(object):
-    def __init__(self, base, filename):
-        self.base = base
-        self.filename = filename
-        self.package, self.dotname = path_to_package(os.path.relpath(filename, base))
-
-    @cached_property
-    def tree(self):
-        source = slurp(self.filename)
-        return ast.parse(source, filename=self.filename)
-
-    @cached_property
-    def scope(self):
-        fill_scopes(self.tree)
-        return self.tree.scope
-
-
-class FileSet(dict):
-    def __init__(self, root, base=None):
-        if base is None:
-            base = root
-        for filename in walk_files(root):
-            pyfile = File(base, filename)
-            self[pyfile.package] = pyfile
-
-
 import sys, ipdb, traceback
 
 def info(type, value, tb):
@@ -83,38 +38,10 @@ def info(type, value, tb):
 
 sys.excepthook = info
 
-from collections import defaultdict
-
-def get_module(node, package):
-    if not node.level:
-        return node.module
-    else:
-        subs = package.split('.')
-        subs = subs[:len(subs) - node.level]
-        if node.module:
-            subs.append(node.module)
-        return '.'.join(subs)
 
 def main():
-    used = defaultdict(set)
     files = FileSet(sys.argv[1], sys.argv[2] if len(sys.argv) >= 3 else None)
-    for package, pyfile in files.items():
-        for name, nodes in pyfile.scope.names.items():
-            # if is_import(nodes[0]) and hasattr(nodes[0], 'module'):
-            if isinstance(nodes[0], ast.ImportFrom):
-                module = get_module(nodes[0], pyfile.dotname)
-                if module in files:
-                    names = {alias.name for alias in nodes[0].names}
-                    used[module].update(names)
-            if any(is_use, nodes):
-                used[package].add(name)
-
-    for package, pyfile in sorted(files.items()):
-        for name, nodes in pyfile.scope.names.items():
-            if name not in used[package]:
-                print '%s:%d:%d: %s %s is never used (globally)' % \
-                      (pyfile.filename, nodes[0].lineno, nodes[0].col_offset, name_class(nodes[0]), name)
-
+    global_usage(files)
 
     from IPython import embed; embed()
     return
@@ -130,9 +57,7 @@ def main():
         # template = compile_template(MapLambda.template)
         # print match(template, tree)
 
-        TreeLinker().visit(tree)
-
-        ScopeBuilder().visit(tree)
+        fill_scopes(tree)
         # print tree.scope
 
         # print astor.dump(tree)
