@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 
 from funcy import cached_property, any
+from tqdm import tqdm
 
 from .asttools import is_use, name_class
 from .utils import slurp
@@ -17,7 +18,7 @@ IGNORED_VARS = {'__all__', '__file__', '__name__', '__version__'}
 def global_usage(files):
     used = defaultdict(set)
 
-    for package, pyfile in files.items():
+    for package, pyfile in tqdm(sorted(files.items())):
         for name, nodes in pyfile.scope.names.items():
             # Symbol imports
             if isinstance(nodes[0], ast.ImportFrom):
