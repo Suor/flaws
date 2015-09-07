@@ -4,7 +4,7 @@ import sys
 import ast
 import re
 
-from funcy import all, imapcat
+from funcy import all, imapcat, split, map
 import astor
 
 from .asttools import (is_write, is_use, is_constant, is_param, is_import,
@@ -40,10 +40,13 @@ sys.excepthook = info
 
 
 def main():
-    from .ext import django
-    django.register(sys.argv[1:])
+    kwargs, args = split(r'^--', sys.argv[1:])
+    kwargs = dict(map(r'^--(\w+)=(.+)', kwargs))
 
-    files = FileSet(sys.argv[1], sys.argv[2] if len(sys.argv) >= 3 else None)
+    from .ext import django
+    django.register(args, kwargs)
+
+    files = FileSet(args, base=kwargs.get('base'), ignore=kwargs.get('ignore'))
     global_usage(files)
     return
 

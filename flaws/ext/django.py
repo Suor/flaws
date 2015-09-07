@@ -1,18 +1,19 @@
 import ast
 
-from funcy import keep, partial
+from funcy import keep, partial, cat, ikeep, project
 
 from ..asttools import ast_eval
 from . import register_global_usage
 
 
-def register(args):
-    settings_module = keep(r'--settings=([\w\.]+)', args)[0]
-    register_global_usage(partial(global_usage, settings_module))
+def register(args, kwargs):
+    # settings_module = kwargs['settings']
+    # extra_urlconf = kwargs['urlconf']
+    register_global_usage(partial(global_usage, opts=project(kwargs, ['settings', 'urlconf'])))
 
 
-def global_usage(settings_module, files, used):
-    settings = files[settings_module]
+def global_usage(files, used, opts={}):
+    settings = files[opts['settings']]
 
     root_urlconf_module = get_name_val(settings.scope.names['ROOT_URLCONF'][0])
     used[root_urlconf_module].add('urlpatterns')
