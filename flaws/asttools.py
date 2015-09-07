@@ -20,6 +20,9 @@ def is_param(node):
 def is_import(node):
     return isinstance(node, (ast.Import, ast.ImportFrom))
 
+def is_name(node, name):
+    return isinstance(node, ast.Name) and node.id == name
+
 
 def ast_eval(node):
     if isinstance(node, (ast.List, ast.Tuple)):
