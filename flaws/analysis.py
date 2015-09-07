@@ -59,12 +59,20 @@ def get_module(node, package):
 # File utils
 
 class FileSet(dict):
-    def __init__(self, root, base=None):
-        if base is None:
-            base = root
-        for filename in walk_files(root):
-            pyfile = File(base, filename)
-            self[pyfile.package] = pyfile
+    def __init__(self, roots, base=None, ignore=None):
+        ignore_re = re.compile(ignore) if ignore else None
+
+        for root in roots:
+            if root.endswith('.py'):
+                files = [root]
+                root = os.path.dirname(root)
+            else:
+                files = walk_files(root)
+            for filename in files:
+                if ignore_re and ignore_re.search(filename):
+                    continue
+                pyfile = File(base or root, filename)
+                self[pyfile.package] = pyfile
 
 
 class File(object):
