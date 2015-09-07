@@ -3,10 +3,10 @@ import os
 import re
 from collections import defaultdict
 
-from funcy import cached_property, any
+from funcy import cached_property, any, imapcat, isa, ikeep, first
 from tqdm import tqdm
 
-from .asttools import is_use, name_class
+from .asttools import is_use, is_name, name_class
 from .utils import slurp
 from .scopes import fill_scopes
 from .ext import run_global_usage
@@ -19,6 +19,7 @@ def global_usage(files):
     used = defaultdict(set)
 
     for package, pyfile in tqdm(sorted(files.items())):
+        # TODO: cycle imports explicitely
         for name, nodes in pyfile.scope.names.items():
             # Symbol imports
             if isinstance(nodes[0], ast.ImportFrom):
@@ -26,12 +27,22 @@ def global_usage(files):
                 if module in files:
                     names = {alias.name for alias in nodes[0].names}
                     used[module].update(names)
-            # Module imports
-            elif isinstance(nodes[0], ast.Import):
-                if name in files:
+                # TODO: check if asname should be used here
+                # TODO: support `from mod1 import mod2; mod2.mod3.func()`
+                full_name = '%s.%s' % (module, name)
+                if full_name in files:
                     for node in nodes[1:]:
                         if isinstance(node, ast.Name) and isinstance(node.up, ast.Attribute):
-                            used[name].add(node.up.attr)
+                            used[full_name].add(node.up.attr)
+            # Module imports
+            elif isinstance(nodes[0], ast.Import):
+                # TODO: support compound imports
+                alias = first(a for a in nodes[0].names if a.name.startswith(name) or a.asname == name)
+
+                if alias.name in files:
+                    attrs = ikeep(find_attr(alias.asname or alias.name, node) for node in nodes[1:])
+                    used[alias.name].update(attrs)
+
             # Direct usage
             if any(is_use, nodes):
                 used[package].add(name)
@@ -43,6 +54,19 @@ def global_usage(files):
             if name not in used[package] and name not in IGNORED_VARS:
                 print '%s:%d:%d: %s %s is never used (globally)' % \
                       (pyfile.filename, nodes[0].lineno, nodes[0].col_offset, name_class(nodes[0]), name)
+
+
+def find_attr(expr, node):
+    parts = expr.split('.')[1:]
+    i = 0
+    while len(parts) > i and is_attr(node.up, parts[i]):
+        node = node.up
+
+    if isinstance(node.up, ast.Attribute):
+        return node.up.attr
+
+def is_attr(node, attr):
+    return isinstance(node, ast.Attribute) and node.attr == attr
 
 
 def get_module(node, package):
