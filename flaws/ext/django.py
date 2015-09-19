@@ -13,6 +13,8 @@ def register(args, kwargs):
 
 
 def global_usage(files, used, opts={}):
+    if 'settings' not in opts:
+        return
     settings = files[opts['settings']]
 
     urlconfs = [get_name_val(settings.scope.names['ROOT_URLCONF'][0])]
