@@ -29,35 +29,22 @@ class MapLambda(Pattern):
 
 
 def match(template, tree):
-    print 'tree'
-    print astor.dump(tree)
-    print 'template'
-    print astor.dump(template)
-    print '*' * 80
     stack = []
     potential = []
     matches = []
 
     def _match(node):
-        print 'stack', stack, 'node', node
-
         # Check if any potential fails here
         next_potential = []
         for p in potential:
             if stack[:len(p['stack'])] != p['stack']:
                 # Potential match can't fail
-                print 'confirm', p
                 matches.append(p)
             else:
                 path = stack[len(p['stack']):]
-                print 'path', path
                 sub_template = get_sub_template(template, path)
-                print 'sub', sub_template
                 if node_matches(node, sub_template, p['context']):
-                    print 'matches', node, sub_template, 'at', path
                     next_potential.append(p)
-                else:
-                    print 'discard', p
         potential[:] = next_potential
 
         # Check if template starts here
@@ -70,7 +57,6 @@ def match(template, tree):
                 'node': node[0] if is_list(node) else node,
                 'context': context,
             })
-            print 'potential', potential[-1]
 
         # Go deeper
         if isinstance(node, ast.AST):
@@ -111,10 +97,8 @@ def node_matches(node, template_node, context):
         return template_node(node, context)
 
 def get_sub_template(template, path):
-    # print 'get_sub_template', path
     sub = template
     for el in path:
-        # print el
         # TODO: optimize it
         if el == 0:
             try:
@@ -129,7 +113,6 @@ def get_sub_template(template, path):
             return lambda node, _: True
         else:
             raise Exception('Unknown path', path, 'in', astor.dump(sub))
-        # print sub
     return sub
 
 
