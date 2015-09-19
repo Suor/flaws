@@ -15,20 +15,6 @@ from .utils import slurp
 from .analysis import global_usage, FileSet
 
 
-class MapLambda(object):
-    def template(body=ast.expr, seq=ast.expr):
-        map(lambda var: body, seq)
-
-    def suggestion():
-        [body for var in seq]
-
-    # def template(cond=ast.expr):
-    #     if cond:
-    #         return True
-    #     else:
-    #         return False
-
-
 import sys, ipdb, traceback
 
 def info(type, value, tb):
