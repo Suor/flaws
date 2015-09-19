@@ -3,10 +3,11 @@ import os
 import re
 from collections import defaultdict
 
-from funcy import cached_property, any, imapcat, isa, ikeep, first
+from funcy import cached_property, any, imapcat, isa, ikeep, first, all, imapcat, split, map
 from tqdm import tqdm
 
-from .asttools import is_use, is_name, name_class
+from .asttools import (is_write, is_use, is_constant, is_param, is_import, is_name,
+                       name_class, node_str, to_source)
 from .utils import slurp
 from .scopes import fill_scopes
 from .ext import run_global_usage
@@ -78,6 +79,27 @@ def get_module(node, package):
         if node.module:
             subs.append(node.module)
         return '.'.join(subs)
+
+
+def local_usage(files):
+    for package, pyfile in sorted(files.items()):
+        for scope, name, nodes in pyfile.scope.walk():
+            node = nodes[0]
+            if all(is_use, nodes) and not scope.is_global(name) and not scope.has_wildcards:
+                print '%s:%d:%d: undefined variable %s' \
+                      % (pyfile.filename, node.lineno, node.col_offset, name)
+            if not scope.is_class and all(is_write, nodes):
+                if name == '_' or scope.is_module and re.search(r'^__\w+__$', name):
+                    continue
+                elif scope.exports is not None and name in scope.exports:
+                    continue
+                elif scope.exports is None and not name.startswith('_') and not is_import(node):
+                    continue
+                # TODO: check that it is method/classmethod
+                elif is_param(node) and name in {'self', 'cls', 'kwargs', 'request'}:
+                    continue
+                print '%s:%d:%d: %s %s is never used' % \
+                      (pyfile.filename, node.lineno, node.col_offset, name_class(node), name)
 
 
 # File utils
