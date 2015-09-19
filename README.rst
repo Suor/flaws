@@ -10,6 +10,23 @@ In early pre-alpha, but already does something useful. It catches:
 - unused variables/values/parameters
 - unused/not exported functions/classes/variables/constants
 
+It also provides you with API to find templates in your code:
+
+.. code:: python
+
+    from flaws.patterns import compile_template, match
+
+    def useless_ifelse(cond=ast.Expr):
+        True if cond else False
+
+    template = compile_template(useless_ifelse)
+    nodes = match(template, tree)
+
+    nodes[0]           # ast.IfExp(...)
+    nodes[0].captures  # {'cond': ast.BinOp(...)}
+
+Try this with your templates and against your own code and consider `leaving feedback <https://github.com/Suor/flaws/issues>`_.
+
 
 Plans
 -----
