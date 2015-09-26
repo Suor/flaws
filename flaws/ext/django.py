@@ -1,6 +1,6 @@
 import ast
 
-from funcy import keep, partial, cat, ikeep, project
+from funcy import partial, cat, ikeep, project
 
 from ..asttools import ast_eval, is_name
 from . import register_global_usage

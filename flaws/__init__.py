@@ -1,17 +1,8 @@
 #!/usr/bin/env python
-import os
 import sys
-import ast
-import re
 
-from funcy import all, imapcat, split, map
-import astor
+from funcy import split, map
 
-from .asttools import (is_write, is_use, is_constant, is_param, is_import,
-                       name_class, node_str, to_source)
-from .scopes import fill_scopes
-from .infer import Inferer
-from .utils import slurp
 from .analysis import global_usage, local_usage, FileSet
 
 

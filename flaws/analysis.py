@@ -3,11 +3,10 @@ import os
 import re
 from collections import defaultdict
 
-from funcy import cached_property, any, imapcat, isa, ikeep, first, all, imapcat, split, map
+from funcy import cached_property, ikeep, any, all, first
 from tqdm import tqdm
 
-from .asttools import (is_write, is_use, is_constant, is_param, is_import, is_name,
-                       name_class, node_str, to_source)
+from .asttools import is_write, is_use, is_param, is_import, name_class
 from .utils import slurp
 from .scopes import fill_scopes
 from .ext import run_global_usage
@@ -82,7 +81,7 @@ def get_module(node, package):
 
 
 def local_usage(files):
-    for package, pyfile in sorted(files.items()):
+    for _, pyfile in sorted(files.items()):
         for scope, name, nodes in pyfile.scope.walk():
             node = nodes[0]
             if all(is_use, nodes) and not scope.is_global(name) and not scope.has_wildcards:
