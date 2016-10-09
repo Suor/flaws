@@ -14,6 +14,18 @@ def register(args, kwargs):
 
 def global_usage(files, used, opts={}):
     settings = files.get(opts.get('settings'))
+
+    # Mark all settings as used
+    if settings:
+        for name, nodes in settings.scope.names.items():
+            node = nodes[0]
+            if is_assign(node) and node.id.isupper():
+                used[settings.dotname].add(name)
+
+    mark_used_views(files, used, settings, opts=opts)
+
+
+def mark_used_views(files, used, settings, opts={}):
     urlconfs = []
 
     # Get root urlconf from settings, the check is needed in case
