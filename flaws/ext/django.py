@@ -13,13 +13,19 @@ def register(args, kwargs):
 
 
 def global_usage(files, used, opts={}):
-    if 'settings' not in opts:
-        return
-    settings = files[opts['settings']]
+    settings = files.get(opts.get('settings'))
+    urlconfs = []
 
-    urlconfs = [get_name_val(settings.scope.names['ROOT_URLCONF'][0])]
+    # Get root urlconf from settings, the check is needed in case
+    if settings:
+        root_urlconf = get_name_val(settings.scope.names['ROOT_URLCONF'][0])
+        if root_urlconf in files:
+            urlconfs.append(root_urlconf)
+    # Get urlconf from options
     if opts.get('urlconf'):
         urlconfs.append(opts['urlconf'])
+
+    # TODO: warn about no urlconf
 
     for urlconf in urlconfs:
         used[urlconf].add('urlpatterns')
