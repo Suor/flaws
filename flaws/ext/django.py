@@ -34,7 +34,7 @@ def mark_used_settings(files, used, opts={}):
         for name, nodes in settings.scope.names.items():
             node = nodes[0]
             if is_assign(node) and node.id.isupper():
-                used[settings.dotname].add(name)
+                used[settings.package].add(name)
 
 
 def mark_used_views(files, used, opts={}):
@@ -102,3 +102,8 @@ def get_name_val(node):
     assert len(assign.targets) == 1
 
     return ast_eval(assign.value)
+
+
+def is_assign(node):
+    return isinstance(node, ast.Name) \
+            and isinstance(node.ctx, ast.Store)
