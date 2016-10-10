@@ -23,7 +23,7 @@ class Scope(object):
         self.names = defaultdict(list)
         self.unscoped_names = defaultdict(list)
         self.global_names = set()
-        self.wildcards = []
+        self.has_wildcards = False
 
     @cached_property
     def module(self):
@@ -41,9 +41,9 @@ class Scope(object):
         return isinstance(self.node, ast.ClassDef)
 
     @property
-    def has_wildcards(self):
+    def sees_wildcards(self):
         parents = takewhile(bool, iterate(lambda s: s.parent, self))
-        return any(s.wildcards for s in parents)
+        return any(s.has_wildcards for s in parents)
 
     @cached_property
     def exports(self):
@@ -199,9 +199,9 @@ class ScopeBuilder(ast.NodeVisitor):
         for alias in node.names:
             name = alias.asname or alias.name
             if name == '*':
-                if not self.scope.is_module:
-                    print 'WARN: wildcard import in nested scope'
-                self.scope.wildcards.append(node)
+                # if not self.scope.is_module:
+                #     print 'WARN: wildcard import in nested scope'
+                self.scope.has_wildcards = True
             else:
                 name = name.split('.')[0]
                 self.scope.add(name, node)

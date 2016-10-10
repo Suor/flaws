@@ -86,7 +86,7 @@ def local_usage(files):
     for _, pyfile in sorted(files.items()):
         for scope, name, nodes in pyfile.scope.walk():
             node = nodes[0]
-            if all(is_use, nodes) and not scope.is_global(name) and not scope.has_wildcards:
+            if all(is_use, nodes) and not scope.is_global(name) and not scope.sees_wildcards:
                 print '%s:%d:%d: undefined variable %s' \
                       % (pyfile.filename, node.lineno, node.col_offset, name)
             if not scope.is_class and all(is_write, nodes):
