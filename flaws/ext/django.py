@@ -16,6 +16,16 @@ def global_usage(files, used, opts={}):
     mark_used_settings(files, used, opts=opts)
     mark_used_views(files, used, opts=opts)
 
+    # Mark migrations
+    for package, _ in files.items():
+        if 'migrations.' in package:
+            used[package].add('Migration')
+
+    # Mark commands
+    for package, _ in files.items():
+        if 'management.commands.' in package:
+            used[package].add('Command')
+
 
 def mark_used_settings(files, used, opts={}):
     settings = files.get(opts.get('settings'))
