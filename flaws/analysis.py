@@ -37,10 +37,12 @@ def global_usage(files):
             # Module imports
             elif isinstance(nodes[0], ast.Import):
                 # TODO: support compound imports
-                alias = first(a for a in nodes[0].names if a.name.startswith(name) or a.asname == name)
+                alias = first(a for a in nodes[0].names
+                                if a.name.startswith(name) or a.asname == name)
 
                 if alias.name in files:
-                    attrs = ikeep(find_attr(alias.asname or alias.name, node) for node in nodes[1:])
+                    attrs = ikeep(find_attr(alias.asname or alias.name, node)
+                                  for node in nodes[1:])
                     used[alias.name].update(attrs)
 
             # Direct usage
