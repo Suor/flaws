@@ -115,6 +115,11 @@ class FileSet(dict):
                 root = os.path.dirname(root)
             else:
                 files = walk_files(root)
+
+            # Guess base
+            if base is None and os.path.isfile(os.path.join(root, '__init__.py')):
+                root = os.path.dirname(os.path.normpath(root))
+
             for filename in files:
                 if ignore_re and ignore_re.search(filename):
                     continue
