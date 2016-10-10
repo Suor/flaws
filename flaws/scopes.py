@@ -45,7 +45,6 @@ class Scope(object):
         parents = takewhile(bool, iterate(lambda s: s.parent, self))
         return any(s.wildcards for s in parents)
 
-    # @print_exits
     @cached_property
     def exports(self):
         # There are several possible scenarious:
@@ -221,7 +220,6 @@ class ScopeBuilder(ast.NodeVisitor):
         self.pop_scope()
 
     def visit_FunctionDef(self, node):
-        # print 'visit_FunctionDef'
         self.scope.add(node.name, node)
         self.visit_all(node.decorator_list, node.args.defaults)
 
@@ -237,7 +235,6 @@ class ScopeBuilder(ast.NodeVisitor):
         if node.args.kwarg:
             self.scope.add(node.args.kwarg, node.args)
         # TODO: handle kwonlyargs
-        # print 'exit visit_FunctionDef', self.scope.unscoped_names
         self.pop_scope()
 
     def visit_Lambda(self, node):
@@ -257,7 +254,6 @@ class ScopeBuilder(ast.NodeVisitor):
         self.pop_scope()
 
     def visit_Name(self, node):
-        # print 'Name', node.id, node.ctx
         # TODO: respect assignments to these or make it a separate error
         self.scope.add(node.id, node)
 
