@@ -86,7 +86,6 @@ class Scope(object):
             self.names[name].append(node)
         else:
             self.unscoped_names[name].append(node)
-        node.in_scope = self
 
     def make_global(self, names):
         self.global_names.update(names)
