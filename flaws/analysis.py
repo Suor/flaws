@@ -121,6 +121,7 @@ def local_usage(files):
                 # TODO: check that it is method/classmethod
                 elif is_param(node) and name in {'self', 'cls', 'kwargs', 'request'}:
                     continue
+                # BUG: shows unused import when it's meant for reexport
                 print '%s:%d:%d: %s %s is never used' % \
                       (pyfile.filename, node.lineno, node.col_offset, name_class(node), name)
 
