@@ -23,7 +23,12 @@ class Scope(object):
         self.names = defaultdict(list)
         self.unscoped_names = defaultdict(list)
         self.global_names = set()
+        self.imports = []
         self.has_wildcards = False
+
+    def freeze(self):
+        """Prevent accidental subsequent changes """
+        self.names = dict(self.names)
 
     @cached_property
     def module(self):
@@ -196,6 +201,8 @@ class ScopeBuilder(ast.NodeVisitor):
         self.pop_scope()
 
     def visit_Import(self, node):
+        self.scope.imports.append(node)
+
         for alias in node.names:
             name = alias.asname or alias.name
             if name == '*':
@@ -264,3 +271,4 @@ class ScopeBuilder(ast.NodeVisitor):
 def fill_scopes(tree):
     TreeLinker().visit(tree)
     ScopeBuilder().visit(tree)
+    tree.scope.freeze()

@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import ast
 import os
 import re
 from collections import defaultdict
 
-from funcy import cached_property, ikeep, any, all, first
+from funcy import cached_property, ikeep, any, all, remove
 from tqdm import tqdm
 
 from .asttools import is_write, is_use, is_param, is_import, name_class
@@ -19,33 +20,38 @@ def global_usage(files):
     used = defaultdict(set)
 
     for package, pyfile in tqdm(sorted(files.items())):
-        # TODO: cycle imports explicitely
+        for scope in pyfile.scope.walk_scopes():
+            for node in scope.imports:
+                if isinstance(node, ast.ImportFrom):
+                    module = get_import_module(node, pyfile.dotname)
+
+                    # Mark all imported things as used
+                    if module in files:
+                        names = {alias.name for alias in node.names}
+                        used[module].update(names)
+
+                    # When importing module look for `module.name`
+                    # TODO: support `from mod1 import mod2; mod2.mod3.func()`
+                    # TODO: handle star imports
+                    for alias in node.names:
+                        full_name = '%s.%s' % (module, alias.name)
+                        if full_name in files:
+                            nodes = scope.names[alias.asname or alias.name]
+                            used[full_name].update(
+                                n.up.attr for n in nodes if isinstance(n.up, ast.Attribute))
+
+                elif isinstance(node, ast.Import):
+                    # TODO: support `import mod1; mod1.mod2.func()`
+                    # TODO: handle non-future relative imports
+                    for alias in node.names:
+                        if alias.name in files:
+                            nodes = scope.names[(alias.asname or alias.name).split('.')[0]]
+                            attrs = ikeep(find_attr(alias.asname or alias.name, node)
+                                          for node in nodes[1:])
+                            used[alias.name].update(attrs)
+
+        # Direct usage
         for name, nodes in pyfile.scope.names.items():
-            # Symbol imports
-            if isinstance(nodes[0], ast.ImportFrom):
-                module = get_module(nodes[0], pyfile.dotname)
-                if module in files:
-                    names = {alias.name for alias in nodes[0].names}
-                    used[module].update(names)
-                # TODO: check if asname should be used here
-                # TODO: support `from mod1 import mod2; mod2.mod3.func()`
-                full_name = '%s.%s' % (module, name)
-                if full_name in files:
-                    for node in nodes[1:]:
-                        if isinstance(node, ast.Name) and isinstance(node.up, ast.Attribute):
-                            used[full_name].add(node.up.attr)
-            # Module imports
-            elif isinstance(nodes[0], ast.Import):
-                # TODO: support compound imports
-                alias = first(a for a in nodes[0].names
-                                if a.name.startswith(name) or a.asname == name)
-
-                if alias.name in files:
-                    attrs = ikeep(find_attr(alias.asname or alias.name, node)
-                                  for node in nodes[1:])
-                    used[alias.name].update(attrs)
-
-            # Direct usage
             if any(is_use, nodes):
                 used[package].add(name)
 
@@ -54,8 +60,8 @@ def global_usage(files):
     for package, pyfile in sorted(files.items()):
         for name, nodes in pyfile.scope.names.items():
             if name not in used[package] and name not in IGNORED_VARS:
-                print '%s:%d:%d: %s %s is never used (globally)' % \
-                      (pyfile.filename, nodes[0].lineno, nodes[0].col_offset, name_class(nodes[0]), name)
+                print '%s:%d: %s %s is never used (globally)' % \
+                      (pyfile.filename, nodes[0].lineno, name_class(nodes[0]), name)
 
 
 def find_attr(expr, node):
@@ -71,7 +77,7 @@ def is_attr(node, attr):
     return isinstance(node, ast.Attribute) and node.attr == attr
 
 
-def get_module(node, package):
+def get_import_module(node, package):
     if not node.level:
         return node.module
     else:
