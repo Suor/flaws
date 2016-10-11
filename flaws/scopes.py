@@ -24,11 +24,28 @@ class Scope(object):
         self.unscoped_names = defaultdict(list)
         self.global_names = set()
         self.imports = []
-        self.has_wildcards = False
+        self.has_stars = False
+        self.maybe_from_star = defaultdict(list)
 
     def freeze(self):
-        """Prevent accidental subsequent changes """
-        self.names = dict(self.names)
+        """
+        Prevent accidental subsequent changes.
+        Helps with debugging analysis.
+        """
+        assert self.is_module
+
+        for scope in self.walk_scopes():
+            # frozendict would be even better
+            _freeze = lambda d: {name: tuple(nodes) for name, nodes in d.items()}
+            scope.names = _freeze(scope.names)
+            scope.maybe_from_star = _freeze(scope.maybe_from_star)
+
+            self.imports = tuple(self.imports)
+
+            # Clean unscoped names
+            assert not scope.unscoped_names
+            del scope.unscoped_names
+            del scope.global_names
 
     @cached_property
     def module(self):
@@ -46,9 +63,9 @@ class Scope(object):
         return isinstance(self.node, ast.ClassDef)
 
     @property
-    def sees_wildcards(self):
+    def sees_stars(self):
         parents = takewhile(bool, iterate(lambda s: s.parent, self))
-        return any(s.has_wildcards for s in parents)
+        return any(s.has_stars for s in parents)
 
     @cached_property
     def exports(self):
@@ -111,9 +128,16 @@ class Scope(object):
 
     def _resolve_unscoped(self, from_scope):
         for name, nodes in list(from_scope.unscoped_names.items()):
+            # NOTE: star import in nested scope may break a chain,
+            #       no way to know locally
+            if self.has_stars:
+                self.maybe_from_star[name] = nodes
+
+            # If name is known or known global then own it
             if name in self.names or self.is_global(name):
                 self.names[name].extend(nodes)
                 from_scope.unscoped_names.pop(name)
+            # If reached top level leave all unscoped inplace
             elif self.is_module:
                 from_scope.names[name].extend(nodes)
                 from_scope.unscoped_names.pop(name)
@@ -205,9 +229,7 @@ class ScopeBuilder(ast.NodeVisitor):
         for alias in node.names:
             name = alias.asname or alias.name
             if name == '*':
-                # if not self.scope.is_module:
-                #     print 'WARN: wildcard import in nested scope'
-                self.scope.has_wildcards = True
+                self.scope.has_stars = True
             else:
                 name = name.split('.')[0]
                 self.scope.add(name, node)

@@ -30,9 +30,20 @@ def global_usage(files):
                         names = {alias.name for alias in node.names}
                         used[module].update(names)
 
+                        # Handle star imports
+                        if '*' in names:
+                            exports = files[module].scope.exports
+                            if exports is None:
+                                print '%s:%d: star import with no __all__ in %s' % \
+                                      (pyfile.filename, node.lineno, module)
+                                exports = remove(r'^_', files[module].scope.names)
+
+                            used[module].update(
+                                name for name in exports
+                                     if any(is_use, scope.maybe_from_star.get(name, ())))
+
                     # When importing module look for `module.name`
                     # TODO: support `from mod1 import mod2; mod2.mod3.func()`
-                    # TODO: handle star imports
                     for alias in node.names:
                         full_name = '%s.%s' % (module, alias.name)
                         if full_name in files:
@@ -91,7 +102,7 @@ def local_usage(files):
     for _, pyfile in sorted(files.items()):
         for scope, name, nodes in pyfile.scope.walk():
             node = nodes[0]
-            if all(is_use, nodes) and not scope.is_global(name) and not scope.sees_wildcards:
+            if all(is_use, nodes) and not scope.is_global(name) and not scope.sees_stars:
                 print '%s:%d:%d: undefined variable %s' \
                       % (pyfile.filename, node.lineno, node.col_offset, name)
             if not scope.is_class and all(is_write, nodes):
