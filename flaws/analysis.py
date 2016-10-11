@@ -81,8 +81,7 @@ def get_import_module(node, package):
     if not node.level:
         return node.module
     else:
-        subs = package.split('.')
-        subs = subs[:len(subs) - node.level]
+        subs = package.split('.')[:-node.level]
         if node.module:
             subs.append(node.module)
         return '.'.join(subs)
