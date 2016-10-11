@@ -18,6 +18,12 @@ IGNORED_VARS = {'__all__', '__file__', '__name__', '__version__'}
 
 def global_usage(files):
     used = defaultdict(set)
+    # TODO: detect undefined names in a scope with star imports
+    # # This is used to detect undefined names
+    # starimports = defaultdict(set)
+    # starimports[package].update(exports)
+
+    # print files['cacheops'].scope
 
     for package, pyfile in tqdm(sorted(files.items())):
         for scope in pyfile.scope.walk_scopes():
