@@ -1,7 +1,7 @@
 import ast
 from collections import defaultdict, deque
 
-from funcy import cached_property, any, icat, iterate, takewhile
+from funcy import cached_property, any, icat, iterate, takewhile, ikeep
 
 from .asttools import nodes_str, is_write, ast_eval
 
@@ -142,16 +142,16 @@ class Scope(object):
         if hasattr(self.node, 'name'):
             name += ' ' + self.node.name
         if hasattr(self.node, 'lineno'):
-            name += ' a line %d' % self.node.lineno
+            name += ' at line %d' % self.node.lineno
 
         title = indent + 'Scope ' + name
         names = '\n'.join(indent + '  %s = %s' % (name, nodes_str(nodes))
                           for name, nodes in sorted(self.names.items()))
         unscoped = '\n'.join(indent + '  unscoped %s = %s' % (name, nodes_str(nodes))
                              for name, nodes in sorted(self.unscoped_names.items()))
-        children = ''.join(c.dump(indent + '  ') for c in self.children)
+        children = '\n'.join('\n' + c.dump(indent + '  ') for c in self.children)
 
-        return '\n'.join([title, names, unscoped, children])
+        return '\n'.join(ikeep([title, names, unscoped, children]))
 
     def __str__(self):
         return self.dump()
