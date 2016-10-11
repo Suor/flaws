@@ -1,7 +1,7 @@
 import ast
 from collections import defaultdict, deque
 
-from funcy import cached_property, any, icat, iterate, takewhile, ikeep
+from funcy import cached_property, any, icat, iterate, takewhile, ikeep, remove
 
 from .asttools import nodes_str, is_write, ast_eval
 
@@ -91,6 +91,11 @@ class Scope(object):
         except ValueError:
             print "WARN: failed parsing __all__"
             return None
+
+    @property
+    def implicit_exports(self):
+        assert self.is_module
+        return remove(r'^_', self.names)
 
     # Names
 

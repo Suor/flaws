@@ -42,11 +42,17 @@ def global_usage(files):
                             if exports is None:
                                 print '%s:%d: star import with no __all__ in %s' % \
                                       (pyfile.filename, node.lineno, module)
-                                exports = remove(r'^_', files[module].scope.names)
+                                exports = files[module].scope.implicit_exports
 
-                            used[module].update(
-                                name for name in exports
-                                     if any(is_use, scope.maybe_from_star.get(name, ())))
+                            if pyfile.is_entry:
+                                if pyfile.scope.exports:
+                                    used[module].update(set(exports) & set(pyfile.scope.exports))
+                                else:
+                                    used[module].update(exports)
+                            else:
+                                used[module].update(
+                                    name for name in exports
+                                         if any(is_use, scope.maybe_from_star.get(name, ())))
 
                     # When importing module look for `module.name`
                     # TODO: support `from mod1 import mod2; mod2.mod3.func()`
@@ -71,6 +77,12 @@ def global_usage(files):
         for name, nodes in pyfile.scope.names.items():
             if any(is_use, nodes):
                 used[package].add(name)
+
+        # Entry point usage
+        if pyfile.is_entry:
+            # TODO: warn about no __all__ in entry point?
+            exports = pyfile.scope.exports or pyfile.scope.implicit_exports
+            used[package].update(exports)
 
     run_global_usage(files, used)
 
@@ -134,26 +146,32 @@ class FileSet(dict):
 
         for root in roots:
             if root.endswith('.py'):
+                entry_point = root
                 files = [root]
                 root = os.path.dirname(root)
             else:
-                files = walk_files(root)
+                entry_point = os.path.join(root, '__init__.py')
+                if os.path.isfile(entry_point):
+                    # Guess base
+                    if base is None:
+                        base = os.path.dirname(os.path.normpath(root))
+                else:
+                    entry_point = None
 
-            # Guess base
-            if base is None and os.path.isfile(os.path.join(root, '__init__.py')):
-                root = os.path.dirname(os.path.normpath(root))
+                files = walk_files(root)
 
             for filename in files:
                 if ignore_re and ignore_re.search(filename):
                     continue
-                pyfile = File(base or root, filename)
+                pyfile = File(base or root, filename, entry_point == filename)
                 self[pyfile.package] = pyfile
 
 
 class File(object):
-    def __init__(self, base, filename):
+    def __init__(self, base, filename, is_entry):
         self.base = base
         self.filename = filename
+        self.is_entry = is_entry
         self.package, self.dotname = path_to_package(os.path.relpath(filename, base))
 
     @cached_property
