@@ -17,6 +17,7 @@ setup(
         'funcy>=1.1',
         'astor',
         'termcolor',
+        'tqdm',
     ],
     entry_points = {
         'console_scripts': [
