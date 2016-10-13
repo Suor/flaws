@@ -25,7 +25,7 @@ def global_usage(files):
 
     # print files['cacheops'].scope
 
-    for package, pyfile in tqdm(sorted(files.items())):
+    for package, pyfile in tqdm(sorted(files.items()), leave=False):
         for scope in pyfile.scope.walk_scopes():
             for node in scope.imports:
                 if isinstance(node, ast.ImportFrom):
