@@ -14,7 +14,7 @@ setup(
     packages=['flaws'],
 
     install_requires=[
-        'funcy>=1.1',
+        'funcy>=1.5',
         'astor',
         'termcolor',
         'tqdm',
