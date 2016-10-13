@@ -19,7 +19,9 @@ def global_usage(files, used, opts={}):
     # Mark migrations
     for package, _ in files.items():
         if 'migrations.' in package:
-            used[package].add('Migration')
+            # Justification for models:
+            #   - do not bother people with unused import in write-once files
+            used[package].update({'Migration', 'models'})
 
     # Mark commands
     for package, _ in files.items():
