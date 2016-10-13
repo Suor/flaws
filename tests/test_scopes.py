@@ -74,8 +74,6 @@ def _dump(scope):
             res['name'] += ' ' + scope.node.name
     if scope.names:
         res['names'] = [name for name, _ in sorted(scope.names.items())]
-    if scope.unscoped_names:
-        res['names'] = [name for name, _ in sorted(scope.unscoped_names.items())]
     if scope.children:
         res['children'] = [_dump(c) for c in scope.children]
 
