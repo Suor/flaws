@@ -155,6 +155,8 @@ class FileSet(dict):
                     # Guess base
                     if base is None:
                         base = os.path.dirname(os.path.normpath(root))
+                        if base == '':
+                            base = '.'
                 else:
                     entry_point = None
 
