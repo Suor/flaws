@@ -176,8 +176,11 @@ class Scope(object):
         title = indent + 'Scope ' + name
         names = '\n'.join(indent + '  %s = %s' % (name, nodes_str(nodes))
                           for name, nodes in sorted(self.names.items()))
-        unscoped = '\n'.join(indent + '  unscoped %s = %s' % (name, nodes_str(nodes))
-                             for name, nodes in sorted(self.unscoped_names.items()))
+        if hasattr(self, 'unscoped_names'):
+            unscoped = '\n'.join(indent + '  unscoped %s = %s' % (name, nodes_str(nodes))
+                                 for name, nodes in sorted(self.unscoped_names.items()))
+        else:
+            unscoped = None
         children = '\n'.join('\n' + c.dump(indent + '  ') for c in self.children)
 
         return '\n'.join(ikeep([title, names, unscoped, children]))
