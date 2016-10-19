@@ -1,14 +1,12 @@
 import ast
 
-from funcy import partial, cat, ikeep, project
+from funcy import partial, cat, ikeep, project, imapcat, any
 
 from ..asttools import ast_eval, is_name
 from . import register_global_usage
 
 
 def register(args, kwargs):
-    # settings_module = kwargs['settings']
-    # extra_urlconf = kwargs['urlconf']
     register_global_usage(partial(global_usage, opts=project(kwargs, ['settings', 'urlconf'])))
 
 
@@ -27,6 +25,25 @@ def global_usage(files, used, opts={}):
     for package, _ in files.items():
         if 'management.commands.' in package:
             used[package].add('Command')
+
+    # Mark registered tags and translations
+    mark_registered(files, used)
+
+
+def mark_registered(files, used):
+    def is_register(node):
+        reg_names = {'register', 'library'}
+        return isinstance(node, ast.Name) and node.id in reg_names \
+            or isinstance(node, ast.Attribute) and node.attr in reg_names
+
+    for package, pyfile in files.items():
+        for name, nodes in pyfile.scope.names.items():
+            adef = nodes[0]
+            if not is_def(adef):
+                continue
+
+            if any(is_register, imapcat(ast.walk, adef.decorator_list)):
+                used[package].add(name)
 
 
 def mark_used_settings(files, used, opts={}):
@@ -53,7 +70,6 @@ def mark_used_views(files, used, opts={}):
         urlconfs.append(opts['urlconf'])
 
     # TODO: warn about no urlconf
-
     for urlconf in urlconfs:
         used[urlconf].add('urlpatterns')
 
@@ -109,3 +125,6 @@ def get_name_val(node):
 def is_assign(node):
     return isinstance(node, ast.Name) \
             and isinstance(node.ctx, ast.Store)
+
+def is_def(node):
+    return isinstance(node, (ast.FunctionDef, ast.ClassDef))
