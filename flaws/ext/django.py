@@ -15,6 +15,14 @@ def global_usage(files, used, opts={}):
     mark_used_settings(files, used, opts=opts)
     mark_used_views(files, used, opts=opts)
 
+    # Mark default app confs
+    for package, pyfile in files.items():
+        if 'default_app_config' in pyfile.scope.names:
+            used[package].add('default_app_config')
+
+            conf = ast_eval(pyfile.scope.names['default_app_config'][0].up.value)
+            _mark_refs(files, used, [conf])
+
     # Mark migrations
     for package, _ in files.items():
         if 'migrations.' in package:
