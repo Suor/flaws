@@ -61,15 +61,12 @@ def mark_used_settings(files, used, opts={}):
                     refs = [n.s for n in ast.walk(node.up.value)
                                 if isinstance(n, ast.Str) and re.search(r'^\w+(?:\.\w+)+$', n.s)]
 
-                    for ref in refs:
-                        module, func = ref.rsplit('.', 1)
-                        if module in files:
-                            used[module].add(func)
-
+                    _mark_refs(files, used, refs)
 
 def mark_used_views(files, used, opts={}):
     settings = files.get(opts.get('settings'))
     urlconfs = []
+
 
     # Get root urlconf from settings, the check is needed in case
     if settings:
@@ -83,11 +80,7 @@ def mark_used_views(files, used, opts={}):
     # TODO: warn about no urlconf
     for urlconf in urlconfs:
         used[urlconf].add('urlpatterns')
-
-        views = _parse_urlconf(files, files[urlconf])
-        views = [v.rsplit('.', 1) for v in views if '.' in v]
-        for module, view in views:
-            used[module].add(view)
+        _mark_refs(files, used, _parse_urlconf(files, files[urlconf]))
 
 
 def _parse_urlconf(files, urlconf):
@@ -101,27 +94,34 @@ def _parse_patterns(files, call_node):
         return []
 
     views_module = ast_eval(call_node.args[0])
-    views = []
+    refs = []
 
     for node in ikeep(_parse_urlrec, ast.walk(call_node)):
         if isinstance(node, ast.Str):
-            views.append(ast_eval(node))
+            refs.append(ast_eval(node))
         elif isinstance(node, ast.Call) and is_name(node.func, 'include') \
                 and len(node.args) >= 1 and isinstance(node.args[0], ast.Str):
             subconf = ast_eval(node.args[0])
             if subconf in files:
-                views.extend(_parse_urlconf(files, files[subconf]))
+                refs.append('%s.urlpatterns' % subconf)
+                refs.extend(_parse_urlconf(files, files[subconf]))
 
     if views_module:
-        views = ['%s.%s' % (views_module, v) for v in views]
-    return views
-
+        refs = ['%s.%s' % (views_module, v) for v in refs]
+    return refs
 
 def _parse_urlrec(node):
     if isinstance(node, ast.Call) and len(node.args) >= 2:
         return node.args[1]
     elif isinstance(node, ast.Tuple) and len(node.elts) >= 2:
         return node.elts[1]
+
+
+def _mark_refs(files, used, refs):
+    for ref in refs:
+        module, func = ref.rsplit('.', 1)
+        if module in files:
+            used[module].add(func)
 
 
 def get_name_val(node):
