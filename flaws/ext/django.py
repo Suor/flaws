@@ -1,4 +1,5 @@
 import ast
+import re
 
 from funcy import partial, cat, ikeep, project, imapcat, any
 
@@ -52,8 +53,18 @@ def mark_used_settings(files, used, opts={}):
     if settings:
         for name, nodes in settings.scope.names.items():
             node = nodes[0]
-            if is_assign(node) and node.id.isupper():
+            if is_store(node) and node.id.isupper():
                 used[settings.package].add(name)
+
+                # Things refered by their string path
+                if isinstance(node.up, ast.Assign):
+                    refs = [n.s for n in ast.walk(node.up.value)
+                                if isinstance(n, ast.Str) and re.search(r'^\w+(?:\.\w+)+$', n.s)]
+
+                    for ref in refs:
+                        module, func = ref.rsplit('.', 1)
+                        if module in files:
+                            used[module].add(func)
 
 
 def mark_used_views(files, used, opts={}):
@@ -122,7 +133,7 @@ def get_name_val(node):
     return ast_eval(assign.value)
 
 
-def is_assign(node):
+def is_store(node):
     return isinstance(node, ast.Name) \
             and isinstance(node.ctx, ast.Store)
 
