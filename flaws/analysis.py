@@ -29,7 +29,7 @@ def global_usage(files):
         for scope in pyfile.scope.walk_scopes():
             for node in scope.imports:
                 if isinstance(node, ast.ImportFrom):
-                    module = get_import_module(node, pyfile.dotname)
+                    module = get_import_module(node, pyfile, files)
 
                     # Mark all imported things as used
                     if module in files:
@@ -106,14 +106,23 @@ def is_attr(node, attr):
     return isinstance(node, ast.Attribute) and node.attr == attr
 
 
-def get_import_module(node, package):
+def get_import_module(node, pyfile, files):
+    def _rel_import(module, level):
+        subs = pyfile.dotname.split('.')[:-level]
+        if module:
+            subs.append(module)
+        return '.'.join(subs)
+
     if not node.level:
+        # Try relative import first
+        # TODO: in python 3 it's always future
+        if 'absolute_import' not in pyfile.scope.future:
+            imported = _rel_import(node.module, 1)
+            if imported in files:
+                return imported
         return node.module
     else:
-        subs = package.split('.')[:-node.level]
-        if node.module:
-            subs.append(node.module)
-        return '.'.join(subs)
+        return _rel_import(node.module, node.level)
 
 
 def local_usage(files):

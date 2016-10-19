@@ -26,6 +26,7 @@ class Scope(object):
         self.imports = []
         self.has_stars = False
         self.maybe_from_star = defaultdict(list)
+        self.future = set()
 
     def freeze(self):
         """
@@ -41,6 +42,7 @@ class Scope(object):
             scope.maybe_from_star = _freeze(scope.maybe_from_star)
 
             self.imports = tuple(self.imports)
+            self.future = frozenset(self.future)
 
             # Clean unscoped names
             assert not scope.unscoped_names
@@ -243,7 +245,9 @@ class ScopeBuilder(ast.NodeVisitor):
                 self.scope.add(name, node)
 
     def visit_ImportFrom(self, node):
-        if node.module != '__future__':
+        if node.module == '__future__':
+            self.scope.future.update(alias.name for alias in node.names)
+        else:
             self.visit_Import(node)
 
     def visit_ClassDef(self, node):
