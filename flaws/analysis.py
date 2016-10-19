@@ -13,7 +13,7 @@ from .scopes import fill_scopes
 from .ext import run_global_usage
 
 
-IGNORED_VARS = {'__all__', '__file__', '__name__', '__version__'}
+IGNORED_VARS = {'__all__', '__file__', '__name__', '__version__', '__author__'}
 
 
 def global_usage(files):
