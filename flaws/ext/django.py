@@ -33,7 +33,7 @@ def global_usage(files, used, opts={}):
 
 def mark_registered(files, used):
     def is_register(node):
-        reg_names = {'register', 'library'}
+        reg_names = {'register', 'library', 'receiver'}
         return isinstance(node, ast.Name) and node.id in reg_names \
             or isinstance(node, ast.Attribute) and node.attr in reg_names
 
