@@ -8,11 +8,11 @@ from .analysis import global_usage, local_usage, FileSet
 
 def main():
     command = sys.argv[1]
-    kwargs, args = split(r'^--', sys.argv[2:])
-    kwargs = dict(map(r'^--(\w+)(?:=(.+))?', kwargs))
+    opts, args = split(r'^--', sys.argv[2:])
+    opts = dict(map(r'^--(\w+)(?:=(.+))?', opts))
 
     # Run ipdb on exception
-    if 'ipdb' in kwargs:
+    if 'ipdb' in opts:
         import ipdb, traceback
 
         def info(type, value, tb):
@@ -24,10 +24,10 @@ def main():
 
     # Register plugins
     from .ext import django
-    django.register(args, kwargs)
+    django.register(args, opts)
 
     # Do the job
-    files = FileSet(args, base=kwargs.get('base'), ignore=kwargs.get('ignore'))
+    files = FileSet(args, base=opts.get('base'), ignore=opts.get('ignore'))
     if command == 'global':
         global_usage(files)
     elif command == 'local':
