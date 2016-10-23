@@ -3,7 +3,7 @@ from collections import defaultdict, deque
 
 from funcy import cached_property, any, icat, iterate, takewhile, ikeep, remove
 
-from .asttools import nodes_str, is_write, ast_eval
+from .asttools import nodes_str, is_write, is_param, ast_eval
 
 
 # TODO: distinguish python versions
@@ -105,8 +105,7 @@ class Scope(object):
         # Params are always in current scope.
         # Other names could be made global or passed to parent scope upon exit,
         # unless we are in a module.
-        is_param = isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param)
-        if is_param or name in self.names or self.is_module:
+        if name in self.names or self.is_module or is_param(node):
             self.names[name].append(node)
         else:
             self.unscoped_names[name].append(node)
