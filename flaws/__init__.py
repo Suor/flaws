@@ -18,6 +18,13 @@ def main():
         def info(type, value, tb):
             traceback.print_exception(type, value, tb)
             print
+            # Insert look-around helpers into the frame
+            import inspect, ast
+            from .asttools import to_source
+            frame = inspect.getinnerframes(tb)[-1][0]
+            frame.f_globals.setdefault('ast', ast)
+            frame.f_globals.setdefault('to_source', to_source)
+            # Run debugger
             ipdb.pm()
 
         sys.excepthook = info
