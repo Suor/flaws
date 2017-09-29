@@ -17,7 +17,7 @@ def main():
 
         def info(type, value, tb):
             traceback.print_exception(type, value, tb)
-            print
+            print()
             # Insert look-around helpers into the frame
             import inspect, ast
             from .asttools import to_source
@@ -40,7 +40,7 @@ def main():
     elif command == 'local':
         local_usage(files)
     else:
-        print 'Unknown command', command
+        print('Unknown command', command)
 
 
 if __name__ == '__main__':

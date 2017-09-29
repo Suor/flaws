@@ -1,14 +1,17 @@
 import ast
 from collections import defaultdict, deque
 
-from funcy import cached_property, any, icat, iterate, takewhile, ikeep, remove
+from funcy.py2 import cached_property, any, icat, iterate, takewhile, ikeep, remove
 
 from .asttools import nodes_str, is_write, is_param, ast_eval
 
 
 # TODO: distinguish python versions
-import __builtin__
-BUILTINS = set(dir(__builtin__))
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins
+BUILTINS = set(dir(builtins))
 GLOBALS = BUILTINS | {'__name__', '__file__'}
 
 
@@ -85,13 +88,13 @@ class Scope(object):
         exports_node = self.names['__all__'][0]
         assign = exports_node.up
         if not isinstance(assign, ast.Assign) or len(assign.targets) != 1:
-            print "WARN: failed parsing __all__"
+            print("WARN: failed parsing __all__")
             return None
 
         try:
             return ast_eval(assign.value)
         except ValueError:
-            print "WARN: failed parsing __all__"
+            print("WARN: failed parsing __all__")
             return None
 
     @property

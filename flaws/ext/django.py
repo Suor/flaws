@@ -1,7 +1,7 @@
 import ast
 import re
 
-from funcy import partial, cat, ikeep, project, imapcat, any
+from funcy.py2 import partial, cat, ikeep, project, imapcat, any
 
 from ..asttools import ast_eval, is_name
 from . import register_global_usage

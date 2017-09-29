@@ -62,7 +62,7 @@ def test_class():
 def _debug_scope(func):
     tree = ast.Module(body=get_body_ast(func))
     fill_scopes(tree)
-    print tree.scope  # Only shown then test fails
+    print(tree.scope)  # Only shown then test fails
     return tree
 
 def _dump(scope):

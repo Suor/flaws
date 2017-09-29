@@ -4,7 +4,7 @@ import os
 import re
 from collections import defaultdict
 
-from funcy import cached_property, ikeep, any, all, remove
+from funcy.py2 import cached_property, ikeep, any, all, remove
 from tqdm import tqdm
 
 from .asttools import is_write, is_use, is_param, is_import, name_class
@@ -40,8 +40,8 @@ def global_usage(files):
                         if '*' in names:
                             exports = files[module].scope.exports
                             if exports is None:
-                                print '%s:%d: star import with no __all__ in %s' % \
-                                      (pyfile.filename, node.lineno, module)
+                                print('%s:%d: star import with no __all__ in %s' % \
+                                      (pyfile.filename, node.lineno, module))
                                 exports = files[module].scope.implicit_exports
 
                             if pyfile.is_entry:
@@ -89,8 +89,8 @@ def global_usage(files):
     for package, pyfile in sorted(files.items()):
         for name, nodes in pyfile.scope.names.items():
             if name not in used[package] and name not in IGNORED_VARS:
-                print '%s:%d: %s %s is never used (globally)' % \
-                      (pyfile.filename, nodes[0].lineno, name_class(nodes[0]), name)
+                print('%s:%d: %s %s is never used (globally)' % \
+                      (pyfile.filename, nodes[0].lineno, name_class(nodes[0]), name))
 
 
 def find_attr(expr, node):
@@ -130,8 +130,8 @@ def local_usage(files):
         for scope, name, nodes in pyfile.scope.walk():
             node = nodes[0]
             if all(is_use, nodes) and not scope.is_global(name) and not scope.sees_stars:
-                print '%s:%d:%d: undefined variable %s' \
-                      % (pyfile.filename, node.lineno, node.col_offset, name)
+                print('%s:%d:%d: undefined variable %s' \
+                      % (pyfile.filename, node.lineno, node.col_offset, name))
             if not scope.is_class and all(is_write, nodes):
                 if name == '_' or scope.is_module and re.search(r'^__\w+__$', name):
                     continue
@@ -143,8 +143,8 @@ def local_usage(files):
                 elif is_param(node) and name in {'self', 'cls', 'kwargs', 'request'}:
                     continue
                 # BUG: shows unused import when it's meant for reexport
-                print '%s:%d:%d: %s %s is never used' % \
-                      (pyfile.filename, node.lineno, node.col_offset, name_class(node), name)
+                print('%s:%d:%d: %s %s is never used' % \
+                      (pyfile.filename, node.lineno, node.col_offset, name_class(node), name))
 
 
 # File utils

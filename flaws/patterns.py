@@ -2,6 +2,7 @@ import ast
 import inspect
 
 from funcy import zipdict, is_list, keep
+from funcy.py3 import lmap
 import astor
 
 from .asttools import get_body_ast
@@ -121,7 +122,7 @@ def compile_template(func):
     assert len(spec.args) == len(spec.defaults or []), "All template args should have AST classes"
 
     compiler = TemplateCompiler(zipdict(spec.args, spec.defaults or []))
-    template = map(compiler.visit, get_body_ast(func))
+    template = lmap(compiler.visit, get_body_ast(func))
     # Strip Expr node wrapping single expression to let it match inside statement
     if len(template) == 1 and isinstance(template[0], ast.Expr):
         return template[0].value
