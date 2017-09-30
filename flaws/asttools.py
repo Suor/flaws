@@ -6,6 +6,9 @@ def is_write(node):
                              ast.FunctionDef, ast.ClassDef, ast.arguments)) \
         or isinstance(node.ctx, (ast.Store, ast.Del, ast.Param))
 
+def is_read(node):
+    return isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+
 def is_use(node):
     return isinstance(node, ast.Name) \
         and isinstance(node.ctx, (ast.Load, ast.Del))

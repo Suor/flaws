@@ -57,6 +57,16 @@ def test_class():
     }
 
 
+def test_class_assign():
+    @_debug_scope
+    def tree():
+        x = 42
+
+        class A:
+            x = x  # Read should refer to outer variable
+
+    assert len(tree.scope.names['x']) == 2
+
 # Testing utilities
 
 def _debug_scope(func):

@@ -2,8 +2,9 @@ import ast
 from collections import defaultdict, deque
 
 from funcy.py2 import cached_property, any, icat, iterate, takewhile, ikeep, remove
+from funcy.py3 import lsplit_by
 
-from .asttools import nodes_str, is_write, is_param, ast_eval
+from .asttools import nodes_str, is_write, is_read, is_param, ast_eval
 
 
 # TODO: distinguish python versions
@@ -126,7 +127,13 @@ class Scope(object):
 
         # Detect local names
         for name, nodes in list(self.unscoped_names.items()):
-            if self.is_module or any(is_write, nodes):
+            # Class scope special semantics: reads before first write go out
+            if self.is_class:
+                starting_reads, rest = lsplit_by(is_read, nodes)
+                if rest:
+                    self.names[name].extend(rest)
+                    self.unscoped_names[name] = starting_reads
+            elif self.is_module or any(is_write, nodes):
                 self.names[name].extend(nodes)
                 self.unscoped_names.pop(name)
 
@@ -294,6 +301,11 @@ class ScopeBuilder(ast.NodeVisitor):
         # TODO: handle kwonlyargs
         self.visit(node.body)
         self.pop_scope()
+
+    def visit_Assign(self, node):
+        # Visit expression first to get outer reads in class scope
+        self.visit(node.value)
+        self.visit_all(node.targets)
 
     def visit_Name(self, node):
         # TODO: respect assignments to these or make it a separate error
