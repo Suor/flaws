@@ -1,9 +1,13 @@
 import ast
+try:
+    from ast import arg as ast_arg
+except ImportError:
+    ast_arg = type('arg', (ast.AST,), {})
 
 
 def is_write(node):
     return isinstance(node, (ast.Import, ast.ImportFrom,
-                             ast.FunctionDef, ast.ClassDef, ast.arguments)) \
+                             ast.FunctionDef, ast.ClassDef, ast.arguments, ast_arg)) \
         or isinstance(node.ctx, (ast.Store, ast.Del, ast.Param))
 
 def is_read(node):

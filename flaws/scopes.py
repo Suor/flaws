@@ -311,6 +311,9 @@ class ScopeBuilder(ast.NodeVisitor):
         # TODO: respect assignments to these or make it a separate error
         self.scope.add(node.id, node)
 
+    def visit_arg(self, node):
+        self.scope.add(node.arg, node)
+
     def visit_Global(self, node):
         self.scope.make_global(node.names)
 
