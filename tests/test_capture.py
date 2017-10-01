@@ -1,4 +1,5 @@
 import ast
+import six
 
 import astor
 
@@ -26,8 +27,10 @@ def test_capture():
 
 
 def test_more_captures():
+    name_types = (ast.Name, ast.arg) if six.PY3 else ast.Name
+
     @compile_template
-    def map_lambda(var=ast.Name, body=ast.expr, seq=ast.expr):
+    def map_lambda(var=name_types, body=ast.expr, seq=ast.expr):
         map(lambda var: body, seq)
 
     @get_body_ast

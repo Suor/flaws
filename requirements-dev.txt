@@ -1,5 +1,6 @@
 git+https://github.com/berkerpeksag/astor.git
 funcy>=1.9
 pytest>=3.2.2
+six==1.11.0
 termcolor==1.1.0
 tqdm

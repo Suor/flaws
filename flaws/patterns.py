@@ -1,7 +1,7 @@
 import ast
 import inspect
 
-from funcy import zipdict, is_list, keep
+from funcy.py2 import zipdict, is_list, keep, partial
 from funcy.py3 import lmap
 import astor
 
@@ -20,6 +20,28 @@ class UselessIf(Pattern):
 
     def suggestion():
         return bool(cond)
+
+    # return True if a != 2 else False
+    # else if ...:
+    #
+    # if n % 400 == 0:
+    #     return True
+    # elif n % 100 == 0:
+    #     return False
+    # elif n % 4 == 0:
+    #     return True
+    # else:
+    #     return False
+
+    # if y<=x:
+    #     if x<=z:
+    #         return True
+    #     else:
+    #         return False
+    # else:
+    #     return False
+    #
+    # y <= x and x <= z
 
 class MapLambda(Pattern):
     def template(body=ast.expr, seq=ast.expr):
@@ -160,25 +182,33 @@ class TemplateCompiler(ast.NodeTransformer):
         if node.id in {'True', 'False', 'None'}:
             return node
         elif node.id in self.args:
-            def match_capture(n, context):
-                if not isinstance(n, self.args[node.id]):
-                    return False
-
-                context['captures'][node.id] = n
-
-                # Sticky variable names
-                if self.args[node.id] == ast.Name:
-                    if (node.id in context['names']) != (n.id in context['rev']):
-                        return False
-                    if node.id in context['names']:
-                        return n.id == context['names'][node.id]
-                    else:
-                        context['names'][node.id] = n.id
-                        context['rev'][n.id] = node.id
-                        return True
-
-                return True
-
-            return match_capture
+            return partial(match_capture, node.id, self.args[node.id])
         else:
             return node
+
+    def visit_arg(self, node):
+        print('visit_arg', node)
+        if node.arg in self.args:
+            return partial(match_capture, node.arg, self.args[node.arg])
+        else:
+            return node
+
+
+def match_capture(arg_name, arg_template, node, context):
+    if not isinstance(node, arg_template):
+        return False
+
+    context['captures'][arg_name] = node
+
+    # Sticky variable names
+    if arg_template is ast.Name:
+        if (arg_name in context['names']) != (node.id in context['rev']):
+            return False
+        if arg_name in context['names']:
+            return node.id == context['names'][arg_name]
+        else:
+            context['names'][arg_name] = node.id
+            context['rev'][node.id] = arg_name
+            return True
+
+    return True
