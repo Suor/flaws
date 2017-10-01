@@ -1,4 +1,4 @@
-astor==0.5
+git+https://github.com/berkerpeksag/astor.git
 funcy>=1.9
 pytest>=3.2.2
 termcolor==1.1.0

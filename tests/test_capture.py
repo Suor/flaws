@@ -22,7 +22,7 @@ def test_capture():
             return False
 
     m = match(useless_if, tree)[0]
-    assert astor.to_source(m.captures['cond']) == '(x < 12)'
+    assert astor.to_source(m.captures['cond']).strip() == '(x < 12)'
 
 
 def test_more_captures():
@@ -35,5 +35,5 @@ def test_more_captures():
         squares = map(lambda x: x ** 2, range(10))
 
     m = match(map_lambda, tree)[0]
-    assert astor.to_source(m.captures['body']) == '(x ** 2)'
-    assert astor.to_source(m.captures['seq']) == 'range(10)'
+    assert astor.to_source(m.captures['body']).strip() == '(x ** 2)'
+    assert astor.to_source(m.captures['seq']).strip() == 'range(10)'
