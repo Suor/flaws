@@ -39,6 +39,8 @@ def dump(node, annotate_fields=True, include_attributes=False, indent='  '):
                 lines[-1] += ']'
             return '\n'.join(lines)
         return repr(node)
+    if isinstance(node, list):
+        return '\n'.join(_format(n) for n in node)
     if not isinstance(node, AST):
         raise TypeError('expected AST, got %r' % node.__class__.__name__)
     return _format(node)
