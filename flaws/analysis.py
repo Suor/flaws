@@ -25,6 +25,12 @@ def global_usage(files):
 
     # print files['cacheops'].scope
 
+    # used[module][name] = [(mod1, node1), (mod2, node2), ...]
+    # used[module, name] = [(mod1, node1), (mod2, node2), ...]
+    # used[module][name] = (mod1, node1)
+    # used[module, name] = (mod1, node1)
+
+    # for package, pyfile in sorted(files.items()):
     for package, pyfile in tqdm(sorted(files.items()), leave=False):
         for scope in pyfile.scope.walk_scopes():
             for node in scope.imports:
@@ -177,6 +183,13 @@ class FileSet(dict):
                 pyfile = File(base or root, filename, entry_point == filename)
                 self[pyfile.package] = pyfile
 
+    # def resolve_ref(self, module, name):
+    #     pyfile = self[module]
+    #     if name in pyfile.scope.names:
+    #         return module, name
+    #     else:
+    #         # ...
+
 
 class File(object):
     def __init__(self, base, filename, is_entry):
@@ -184,6 +197,9 @@ class File(object):
         self.filename = filename
         self.is_entry = is_entry
         self.package, self.dotname = path_to_package(os.path.relpath(filename, base))
+
+    def __str__(self):
+        return '<File: %s>' % self.filename
 
     @cached_property
     def tree(self):

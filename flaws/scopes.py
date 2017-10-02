@@ -200,8 +200,8 @@ class Scope(object):
 
         return '\n'.join(ikeep([title, names, unscoped, children]))
 
-    def __str__(self):
-        return self.dump()
+    __str__ = __repr__ = dump
+
 
 
 class TreeLinker(ast.NodeVisitor):
