@@ -145,9 +145,13 @@ def local_usage(files):
                     continue
                 elif scope.exports is None and not name.startswith('_') and not is_import(node):
                     continue
-                # TODO: check that it is method/classmethod
-                elif is_param(node) and name in {'self', 'cls', 'kwargs', 'request'}:
+                # NOTE: skipping all params for now as this gets too many false positives:
+                #       protocols, overriden methods, signal handlers, etc.
+                elif is_param(node):
                     continue
+                # # TODO: check that it is method/classmethod
+                # elif is_param(node) and name in {'self', 'cls', 'kwargs', 'request'}:
+                #     continue
                 # BUG: shows unused import when it's meant for reexport
                 print('%s:%d:%d: %s %s is never used' % \
                       (pyfile.filename, node.lineno, node.col_offset, name_class(node), name))
