@@ -4,6 +4,7 @@ try:
 except ImportError:
     ast_arg = type('arg', (ast.AST,), {})
 
+from funcy.py3 import lmap
 
 def is_write(node):
     return isinstance(node, (ast.Import, ast.ImportFrom,
@@ -33,7 +34,7 @@ def is_name(node, name):
 
 def ast_eval(node):
     if isinstance(node, (ast.List, ast.Tuple)):
-        return map(ast_eval, node.elts)
+        return lmap(ast_eval, node.elts)
     elif isinstance(node, ast.Str):
         return node.s
     elif isinstance(node, ast.Num):
