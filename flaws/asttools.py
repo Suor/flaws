@@ -22,7 +22,7 @@ def is_constant(node):
 
 def is_param(node):
     return isinstance(node, ast.Name) and isinstance(node.ctx, ast.Param) \
-        or isinstance(node, ast.arguments)
+        or isinstance(node, (ast.arguments, ast_arg))
 
 def is_import(node):
     return isinstance(node, (ast.Import, ast.ImportFrom))

@@ -106,6 +106,7 @@ class Scope(object):
     # Names
 
     def add(self, name, node):
+        assert isinstance(name, str)
         # Params are always in current scope.
         # Other names could be made global or passed to parent scope upon exit,
         # unless we are in a module.
@@ -132,7 +133,10 @@ class Scope(object):
                 starting_reads, rest = lsplit_by(is_read, nodes)
                 if rest:
                     self.names[name].extend(rest)
-                    self.unscoped_names[name] = starting_reads
+                    if starting_reads:
+                        self.unscoped_names[name] = starting_reads
+                    else:
+                        self.unscoped_names.pop(name)
             elif self.is_module or any(is_write, nodes):
                 self.names[name].extend(nodes)
                 self.unscoped_names.pop(name)
@@ -270,52 +274,53 @@ class ScopeBuilder(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.scope.add(node.name, node)
-        self.visit_all(node.decorator_list, node.args.defaults)
+        self.visit_all(node.decorator_list)
+        self.visit_all(node.args.defaults, getattr(node.args, 'kw_defaults', []))
 
         self.push_scope(node)
-        self.visit_all(node.args.args, node.body)
-        # Visit vararg and kwarg
-        # NOTE: arguments node doesn't have lineno and col_offset,
-        #       so we copy them from a function node
-        node.args.lineno = node.lineno
-        node.args.col_offset = node.col_offset
-        if node.args.vararg:
-            self.scope.add(node.args.vararg, node.args)
-        if node.args.kwarg:
-            self.scope.add(node.args.kwarg, node.args)
-        # TODO: handle kwonlyargs
+        self.visit(node.args)
+        self.visit_all(node.body)
         self.pop_scope()
 
     def visit_Lambda(self, node):
+        self.visit_all(node.args.defaults, getattr(node.args, 'kw_defaults', []))
+
         self.push_scope(node)
-        self.visit_all(node.args.args)
-        # Visit vararg and kwarg
-        # NOTE: arguments node doesn't have lineno and col_offset,
-        #       so we copy them from a function node
-        node.args.lineno = node.lineno
-        node.args.col_offset = node.col_offset
-        if node.args.vararg:
-            self.scope.add(node.args.vararg, node.args)
-        if node.args.kwarg:
-            self.scope.add(node.args.kwarg, node.args)
-        # TODO: handle kwonlyargs
+        self.visit(node.args)
         self.visit(node.body)
         self.pop_scope()
 
-    def visit_Assign(self, node):
-        # Visit expression first to get outer reads in class scope
-        self.visit(node.value)
-        self.visit_all(node.targets)
+    def visit_arguments(self, node):
+        self.visit_all(node.args)
+        # NOTE: arguments node doesn't have lineno and col_offset,
+        #       so we copy them from a function node
+        node.lineno = node.up.lineno
+        node.col_offset = node.up.col_offset
+
+        # In Python 2 these are just strings
+        for a in (node.vararg, node.kwarg):
+            if isinstance(a, str):
+                self.scope.add(a, node)
+            elif a is not None:
+                self.visit(a)
+
+        if hasattr(node, 'kwonlyargs'):
+            self.visit_all(node.kwonlyargs)
+
+    def visit_arg(self, node):
+        self.scope.add(node.arg, node)
 
     def visit_Name(self, node):
         # TODO: respect assignments to these or make it a separate error
         self.scope.add(node.id, node)
 
-    def visit_arg(self, node):
-        self.scope.add(node.arg, node)
-
     def visit_Global(self, node):
         self.scope.make_global(node.names)
+
+    def visit_Assign(self, node):
+        # Visit expression first to get outer reads in class scope
+        self.visit(node.value)
+        self.visit_all(node.targets)
 
 
 def fill_scopes(tree):

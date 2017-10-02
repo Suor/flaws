@@ -53,6 +53,21 @@ def test_arg_shadow():
     }
 
 
+def test_vararg():
+    @_debug_scope
+    def tree():
+        def f(x, y, *a, **kw):
+            return a, kw
+
+    assert _dump(tree.scope) == {
+        'names': ['f'],
+        'children': [{
+            'name': 'FunctionDef f',
+            'names': ['a', 'kw', 'x', 'y']
+        }]
+    }
+
+
 def test_class():
     @_debug_scope
     def tree():
