@@ -39,6 +39,10 @@ def main():
         global_usage(files)
     elif command == 'local':
         local_usage(files)
+    elif command == 'scope':
+        assert len(files) == 1
+        (filename, file), = files.items()
+        print(file.scope)
     else:
         print('Unknown command', command)
 
