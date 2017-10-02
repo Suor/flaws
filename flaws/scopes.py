@@ -322,6 +322,15 @@ class ScopeBuilder(ast.NodeVisitor):
         self.visit(node.value)
         self.visit_all(node.targets)
 
+    def visit_ExceptHandler(self, node):
+        self.visit(node.type)
+        # In Python 3 this is not wrapped
+        if isinstance(node.name, str):
+            self.scope.add(node.name, node)
+        elif node.name:
+            self.visit(node.name)
+        self.visit_all(node.body)
+
 
 def fill_scopes(tree):
     TreeLinker().visit(tree)

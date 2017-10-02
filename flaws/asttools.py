@@ -7,7 +7,7 @@ except ImportError:
 from funcy.py3 import lmap
 
 def is_write(node):
-    return isinstance(node, (ast.Import, ast.ImportFrom,
+    return isinstance(node, (ast.Import, ast.ImportFrom, ast.ExceptHandler,
                              ast.FunctionDef, ast.ClassDef, ast.arguments, ast_arg)) \
         or isinstance(node.ctx, (ast.Store, ast.Del, ast.Param))
 
