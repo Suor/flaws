@@ -77,7 +77,7 @@ def get_ast(func):
     source = textwrap.dedent(source)
 
     # Preserve line numbers
-    source = '\n' * (func.__code__.co_firstlineno - 2) + source
+    source = '\n' * (func.__code__.co_firstlineno - 1) + source
 
     return ast.parse(source, func_file(func), 'single')
 
