@@ -31,6 +31,9 @@ def is_import(node):
 def is_name(node, name):
     return isinstance(node, ast.Name) and node.id == name
 
+def is_call(node, name):
+    return isinstance(node, ast.Call) and is_name(node.func, name)
+
 
 def ast_eval(node):
     if isinstance(node, (ast.List, ast.Tuple)):

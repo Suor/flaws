@@ -3,7 +3,7 @@ import re
 
 from funcy.py2 import partial, cat, ikeep, project, imapcat, any
 
-from ..asttools import ast_eval, is_name
+from ..asttools import ast_eval, is_name, is_call
 from . import register_global_usage
 
 
@@ -75,7 +75,6 @@ def mark_used_views(files, used, opts={}):
     settings = files.get(opts.get('settings'))
     urlconfs = []
 
-
     # Get root urlconf from settings, the check is needed in case
     if settings:
         root_urlconf = get_name_val(settings.scope.names['ROOT_URLCONF'][0])
@@ -92,10 +91,23 @@ def mark_used_views(files, used, opts={}):
 
 
 def _parse_urlconf(files, urlconf):
-    is_patterns = lambda node: isinstance(node, ast.Call) and is_name(node.func, 'patterns')
-    patterns = filter(is_patterns, ast.walk(urlconf.tree))
-    return cat(_parse_patterns(files, p) for p in patterns)
+    # Old patterns() call, TODO: drop them
+    patterns = [n for n in ast.walk(urlconf.tree) if is_call(n, 'patterns')]
+    if patterns:
+        return cat(_parse_patterns(files, p) for p in patterns)
 
+    # NOTE that we don't support mixing patterns() and new style in single file
+    refs = [n.args[1].s for n in ast.walk(urlconf.tree) if is_call(n, 'url') and
+            len(n.args) >= 2 and isinstance(n.args[1], ast.Str)]
+
+    included = [n.args[0].s for n in ast.walk(urlconf.tree) if is_call(n, 'include') and
+                len(n.args) >= 1 and isinstance(n.args[0], ast.Str)]
+    for mod in included:
+        if mod in files:
+            refs.append('%s.urlpatterns' % mod)
+            refs.extend(_parse_urlconf(files, files[mod]))
+
+    return refs
 
 def _parse_patterns(files, call_node):
     if len(call_node.args) < 2 or not isinstance(call_node.args[0], ast.Str):
@@ -121,6 +133,7 @@ def _parse_patterns(files, call_node):
 def _parse_urlrec(node):
     if isinstance(node, ast.Call) and len(node.args) >= 2:
         return node.args[1]
+    # TODO: drop old tuple style
     elif isinstance(node, ast.Tuple) and len(node.elts) >= 2:
         return node.elts[1]
 
