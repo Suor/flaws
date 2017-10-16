@@ -87,7 +87,10 @@ def func_file(func):
 
 # Code generation
 
-from astor.code_gen import SourceGenerator
+try:
+    from astor.code_gen import SourceGenerator
+except ImportError:
+    from astor.codegen import SourceGenerator
 from termcolor import colored
 
 def to_source(node, indent_with=' ' * 4, add_line_information=False):
