@@ -9,7 +9,7 @@ from .analysis import global_usage, local_usage, FileSet
 def main():
     command = sys.argv[1]
     opts, args = split(r'^--', sys.argv[2:])
-    opts = dict(map(r'^--(\w+)(?:=(.+))?', opts))
+    opts = dict(map(r'^--([\w-]+)(?:=(.+))?', opts))
 
     # Run ipdb on exception
     if 'ipdb' in opts:
@@ -34,7 +34,8 @@ def main():
     django.register(args, opts)
 
     # Do the job
-    files = FileSet(args, base=opts.get('base'), ignore=opts.get('ignore'))
+    files = FileSet(args, base=opts.get('base'), ignore=opts.get('ignore'),
+        entry_points=opts.get('entry-points'))
     if command == 'global':
         global_usage(files)
     elif command == 'local':

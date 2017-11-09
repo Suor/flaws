@@ -160,8 +160,9 @@ def local_usage(files):
 # File utils
 
 class FileSet(dict):
-    def __init__(self, roots, base=None, ignore=None):
+    def __init__(self, roots, base=None, ignore=None, entry_points=None):
         ignore_re = re.compile(ignore) if ignore else None
+        entry_points = set((entry_points or '').split(','))
 
         for root in roots:
             if root.endswith('.py'):
@@ -186,6 +187,8 @@ class FileSet(dict):
                     continue
                 pyfile = File(base or root, filename, entry_point == filename)
                 self[pyfile.package] = pyfile
+                if pyfile.package in entry_points:
+                    pyfile.is_entry = True
 
     # def resolve_ref(self, module, name):
     #     pyfile = self[module]
