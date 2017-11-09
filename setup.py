@@ -15,7 +15,7 @@ setup(
 
     install_requires=[
         'funcy>=1.5',
-        'astor',
+        'astor>=0.6',
         'termcolor',
         'tqdm',
     ],
